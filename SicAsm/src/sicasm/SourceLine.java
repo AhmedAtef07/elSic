@@ -2,9 +2,9 @@ package sicasm;
 
 public class SourceLine {
     private String label, 
-            mnemonic, 
-            operand, 
-            comment;
+                   mnemonic, 
+                   operand, 
+                   comment;
 
     public SourceLine(String label, String mnemonic, String operand, 
                       String comment) {
@@ -28,5 +28,5 @@ public class SourceLine {
 
     public String getComment() {
         return comment;
-    }    
+    }
 }
