@@ -15,6 +15,7 @@ public class SourceLine {
         this.mnemonic = mnemonic;
         this.operand = operand;
         this.comment = comment;
+        isLineComment = false;
     }
     
     public SourceLine(String comment) {
@@ -40,6 +41,10 @@ public class SourceLine {
 
     public void setAddressLocation(int addressLocation) {
         this.addressLocation = addressLocation;
+    }
+
+    public int getAddressLocation() {
+        return addressLocation;
     }
 
     public void setObjectCode(int objectCode) {

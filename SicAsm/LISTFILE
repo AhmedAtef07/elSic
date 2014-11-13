@@ -1,0 +1,8 @@
+0000 TEST     START   1000     
+1000 LABEL1   ADD     ALPHA    
+1003          ADD     ALPHA    
+1006          WORD    5        
+1009          RESW    10       
+1027          BYTE    c'ahmed atef' 
+1031          BYTE    x'F6'    
+1032          RESB    2        
