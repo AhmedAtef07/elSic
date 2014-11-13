@@ -5,13 +5,21 @@ public class SourceLine {
                    mnemonic, 
                    operand, 
                    comment;
-
+    private int addressLocation, 
+                objectCode;
+    public Boolean isLineComment;
+    
     public SourceLine(String label, String mnemonic, String operand, 
                       String comment) {
         this.label = label;
         this.mnemonic = mnemonic;
         this.operand = operand;
         this.comment = comment;
+    }
+    
+    public SourceLine(String comment) {
+        this.comment = comment;
+        isLineComment = true;
     }
 
     public String getLabel() {
@@ -29,4 +37,14 @@ public class SourceLine {
     public String getComment() {
         return comment;
     }
+
+    public void setAddressLocation(int addressLocation) {
+        this.addressLocation = addressLocation;
+    }
+
+    public void setObjectCode(int objectCode) {
+        this.objectCode = objectCode;
+    }
+    
+    
 }
