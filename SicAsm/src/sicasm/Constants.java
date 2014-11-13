@@ -67,4 +67,9 @@ public final class Constants {
         OpTable.put("TIXR", "B8");
         OpTable.put("WD", "DC");
     }
+    
+    public enum Errors {
+        UNCLOSED_QUOTE, // 0 
+                
+    }
 }

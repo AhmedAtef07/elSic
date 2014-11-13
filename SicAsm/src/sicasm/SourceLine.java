@@ -4,10 +4,11 @@ public class SourceLine {
     private String label, 
                    mnemonic, 
                    operand, 
-                   comment;
-    private int addressLocation, 
-                objectCode;
-    public Boolean isLineComment;
+                   comment,
+                   objectCode;
+    private int addressLocation,
+                errors;
+    private Boolean isLineComment;    
     
     public SourceLine(String label, String mnemonic, String operand, 
                       String comment) {
@@ -47,9 +48,23 @@ public class SourceLine {
         return addressLocation;
     }
 
-    public void setObjectCode(int objectCode) {
+    public void setObjectCode(String objectCode) {
         this.objectCode = objectCode;
     }
+
+    public String getObjectCode() {
+        return objectCode;
+    }  
+
+    public Boolean getIsLineComment() {
+        return isLineComment;
+    }
     
-    
+    public void addError(Constants.Errors error) {
+        errors |= 1 << error.ordinal();
+    }
+
+    public int getErrors() {
+        return errors;
+    }    
 }
