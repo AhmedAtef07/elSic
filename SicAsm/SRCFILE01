@@ -1,0 +1,11 @@
+TEST     START   1000     
+label1   ADD     ALPHA    
+         AdD     ALPHA    
+         WORD    5        
+         RESW    10       
+          
+         BYTE    c'ahmed atef' 
+         BYTE    x'F6F6F6F6F6F6F6F6F6F6F6'    
+          BYTE    x'F6'    
+ALPHA    BYTE    x'F6'    
+         RESB    2        
