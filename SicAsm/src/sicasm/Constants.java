@@ -72,8 +72,10 @@ public final class Constants {
         // Sorted in alphabetical order.       
         DUPLICATE_LABEL,
         DUPLICATE_START,
+        ILLEGAL_BYTE_OPERAND,
         ILLEGAL_HEX,
         ILLEGAL_OPERAND,
+        ILLEGAL_WORD_OPERAND,
         MISSING_MNEMONIC, 
         MISSING_OPERAND,
         UNCLOSED_QUOTE,
@@ -87,9 +89,11 @@ public final class Constants {
         ErrorMessages.put(Errors.DUPLICATE_LABEL, 
                 "Duplicate or misplaced start statement");
         ErrorMessages.put(Errors.DUPLICATE_START, "");
+        ErrorMessages.put(Errors.ILLEGAL_BYTE_OPERAND, "");
         ErrorMessages.put(Errors.ILLEGAL_HEX,
                 "Number of hex digits must be even");
         ErrorMessages.put(Errors.ILLEGAL_OPERAND, "");
+        ErrorMessages.put(Errors.ILLEGAL_WORD_OPERAND, "");
         ErrorMessages.put(Errors.MISSING_MNEMONIC, "");
         ErrorMessages.put(Errors.MISSING_OPERAND, "");
         ErrorMessages.put(Errors.UNCLOSED_QUOTE, "");
