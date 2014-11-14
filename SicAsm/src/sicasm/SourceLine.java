@@ -84,7 +84,11 @@ public class SourceLine {
             }
         }
         return errorMessages;
-    }    
+    }  
+    
+    public Boolean lineContainsErrors() {
+        return errors != 0;
+    }
 
     public static int getLabelMaxLength() {
         return labelMaxLength;

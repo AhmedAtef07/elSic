@@ -12,17 +12,29 @@ import java.util.Date;
 import java.util.TreeMap;
 
 public final class ListFile {
-    ArrayList<SourceLine> sourceLines;
-    int locationCounter;
-    TreeMap<String, Integer> symTable;
-    public ListFile(String sourceFileName) throws IOException {
+    private ArrayList<SourceLine> sourceLines;
+    private int locationCounter,
+                startAddress,
+                programLength;
+    private TreeMap<String, Integer> symTable;
+    private Boolean errorsExist;
+            
+    public ListFile(String sourceFileName, Boolean gerenateListFile) 
+            throws IOException {
         SourceLine.resetMaxLength();
         SourceFile sourceFile = new SourceFile(sourceFileName);
         sourceLines = sourceFile.getTokenz();
         symTable = new TreeMap<>();
-        
+        errorsExist = false;
         passOne();
         passTwo();
+        if (gerenateListFile) {
+            export();            
+        }
+    }
+
+    public ArrayList<SourceLine> getSourceLines() {
+        return sourceLines;
     }
     
     private Boolean isHexInteger(String s) {
@@ -66,6 +78,7 @@ public final class ListFile {
                 String operand = sourceLine.getOperand();
                 if (isHexInteger(operand)) {
                     locationCounter = Integer.parseInt(operand, 16);
+                    startAddress = locationCounter;
                     if (locationCounter >= 0x8000) {
                         // Out of memeory 
                     }
@@ -199,8 +212,10 @@ public final class ListFile {
                 // Error undefined mneomonic.
                 System.out.println("Error");
             }
-            sourceLine.setObjectCode(objectCode);
+            sourceLine.setObjectCode(objectCode);            
+            errorsExist |= sourceLine.lineContainsErrors();
         }
+        programLength = locationCounter - startAddress;
     }
     
     private Boolean isValidByteOperand(String operand) {
@@ -282,4 +297,16 @@ public final class ListFile {
         pw.flush();
         pw.close();
     }
+
+    public Boolean getErrorsExist() {
+        return errorsExist;
+    }    
+
+    public int getStartAddress() {
+        return startAddress;
+    }
+
+    public int getProgramLength() {
+        return programLength;
+    }    
 }

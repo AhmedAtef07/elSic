@@ -1,5 +1,5 @@
 ElSic Assembler 1.0
-Generated: 2014/11/14 21:46:49
+Generated: 2014/11/14 23:27:22
 
 0000        atef      start  1000         
 1000 041066           ldx    zero         
@@ -27,7 +27,7 @@ Generated: 2014/11/14 21:46:49
 103C DC1076           wd     outdev       
 103F 2C1072           tix    length       
 1042 381033           jlt    printno      
-1045 3C107A           j      exit         
+1045 3C105D           j      number       
             .b
 1048 E01076 printyes  td     outdev       
 104B 301048           jeq    printyes     
@@ -35,16 +35,18 @@ Generated: 2014/11/14 21:46:49
 1051 DC1076           wd     outdev       
 1054 2C1072           tix    length       
 1057 381048           jlt    printyes     
-105A 3C107A           j      exit         
+105A 3C105D           j      number       
 105D 000007 number    word   7            
 1060 000001 i         word   1            
 1063        tempi     resw   1            
 1066 000000 zero      word   0            
-1069 FFFFFF one       word   16777215     
+1069 0001F4 one       word   500          
 106C 617364 yesprime  byte   c'asd'       
 106F 6E6D72 notprime  byte   c'nmr'       
 1072 00000F length    word   15           
 1075 F3     indev     byte   x'f3'        
 1076 06     outdev    byte   x'06'        
 1077        ansmod    resw   1            
-107A        exit      end    atef         
+107A        res1      resb   80           
+10CA 000007           word   7            
+10CD                  end    atef         
