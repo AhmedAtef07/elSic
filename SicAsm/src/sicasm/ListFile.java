@@ -4,21 +4,22 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.math.BigInteger;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.TreeMap;
 
 public final class ListFile {
     ArrayList<SourceLine> sourceLines;
-    // ArrayList<Symbol> symTable;
     int locationCounter;
-    int instructionCounter;
     TreeMap<String, Integer> symTable;
     public ListFile(String sourceFileName) throws IOException {
         SourceLine.resetMaxLength();
         SourceFile sourceFile = new SourceFile(sourceFileName);
         sourceLines = sourceFile.getTokenz();
         symTable = new TreeMap<>();
-        instructionCounter = 0;
         
         passOne();
         passTwo();
@@ -36,7 +37,8 @@ public final class ListFile {
     }    
     
     private void passOne() {
-        int lineNumber = 0;
+        int lineNumber = -1;
+        Boolean startExist = false;
         for (SourceLine sourceLine : sourceLines) {
             ++lineNumber;
             if (sourceLine.getIsLineComment()) {
@@ -55,12 +57,13 @@ public final class ListFile {
             if (Constants.OpTable.containsKey(menomonic)) {
                 locationCounter += 3;
             } else if (menomonic.equals("START")) {
-                if (lineNumber != 1) {
+                if (lineNumber != 0) {
                     // Error misplaces start.
                     sourceLine.addError(Constants.Errors.DUPLICATE_START);
                     continue;
                 }
-                String operand = sourceLines.get(0).getOperand();
+                startExist = true;
+                String operand = sourceLine.getOperand();
                 if (isHexInteger(operand)) {
                     locationCounter = Integer.parseInt(operand, 16);
                     if (locationCounter >= 0x8000) {
@@ -68,11 +71,10 @@ public final class ListFile {
                     }
                 } else {
                     locationCounter = 0;
-                    
-                    // throw some error becuase the operand is not a number.
+                    sourceLine.addError(Constants.Errors.INVALID_START_ADDRESS);
                 }                 
             } else if (menomonic.equals("END")) {
-                return;
+                break;
             } else if (menomonic.equals("WORD")) {
                 locationCounter += 3;
             } else if (menomonic.equals("BYTE")) {
@@ -93,11 +95,11 @@ public final class ListFile {
             } else if (menomonic.equals("RESB")) {
                 locationCounter += Integer.parseInt(sourceLine.getOperand());
             } else {
-                // Error undefined mneomonic!!!!!!
                 sourceLine.addError(Constants.Errors.UNRECOGNIZED_MNEMONIC);
-                System.out.println(menomonic);
-                System.out.println("Error");
             }
+        }
+        if (!startExist) {
+             sourceLines.get(0).addError(Constants.Errors.MISSING_START);
         }
     }
     
@@ -106,8 +108,7 @@ public final class ListFile {
             if (sourceLine.getIsLineComment()) {
                 continue;
             }                    
-            // TODO(AhmedAtef07): Convert following else ifs into switch case.
-            // TODO(AhmedAtef07): Check ignore case or all to upper.
+            
             String objectCode = "";   
             String menomonic = sourceLine.getMnemonic().toUpperCase();
             String operand = sourceLine.getOperand();
@@ -156,7 +157,9 @@ public final class ListFile {
                     objectCode = String.format(
                             "%06X", Integer.parseInt(operand));           
                 } else if (isValidWordOperand(operand) == 1) {
-                    // Number out of range              
+                    // Number out of range  
+                    sourceLine.addError(
+                            Constants.Errors.WORD_OPERAND_OUT_OF_RANGE);                        
                 } else {
                     // Invalid word operand.
                     sourceLine.addError(Constants.Errors.INVALID_WORD_OPERAND);
@@ -217,11 +220,19 @@ public final class ListFile {
                 return 0;
             }
         }
-        return Integer.parseInt(operand) <= 0xFFFFFF ? 7 : 1;
+        BigInteger big = new BigInteger(operand);
+        BigInteger maxInt = new BigInteger(0xFFFFFF + "");
+        if (big.compareTo(maxInt) == 1) {
+            return 1;
+        }
+        return 7;
     }
     
     public void export() throws FileNotFoundException {
-        String lines = "ElSic Assembler V1.0\n\n";
+        String lines = "ElSic Assembler 1.0\n";
+        DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+        lines += "Generated: " + dateFormat.format(new Date()) + "\n\n";
+        
         for (SourceLine sourceLine : sourceLines) {
             if (sourceLine.getIsLineComment()) {
                 lines += "            " + sourceLine.getComment() + "\n";
@@ -231,7 +242,8 @@ public final class ListFile {
             ArrayList<Constants.Errors> errorsList = sourceLine.getErrorsList();
             String objectCode = sourceLine.getObjectCode();
             String subObjectCode;
-            if (errorsList == null) {
+            if (errorsList == null || (errorsList.size() == 1 && 
+                    errorsList.get(0).equals(Constants.Errors.MISSING_START))) {
                 subObjectCode = objectCode.substring(
                         it, it = Math.min(it + 6, objectCode.length()));
             } else {
@@ -241,13 +253,14 @@ public final class ListFile {
             lines += String.format(
                     "%04X %-6s %-" + SourceLine.getLabelMaxLength() + "s  %-" + 
                     SourceLine.getMnemonicMaxLength()+ "s  %-" + 
-                    SourceLine.getOperandMaxLength()+ "s  %s\n",
+                    SourceLine.getOperandMaxLength()+ "s   %s\n",
                     sourceLine.getAddressLocation(),    
                     subObjectCode,
                     sourceLine.getLabel(), 
                     sourceLine.getMnemonic(), 
                     sourceLine.getOperand(), 
                     sourceLine.getComment()); 
+            
             while(it < objectCode.length()) {
                  subObjectCode = objectCode.substring(
                          it, it = Math.min(it + 6, objectCode.length()));   
@@ -257,7 +270,7 @@ public final class ListFile {
                 for (int i = 0; i < errorsList.size(); ++i) {
                     lines += "  **** " +
                              Constants.ErrorMessages.get(errorsList.get(i)) +
-                             ". ****n";
+                             ". ****\n";
                 }
             }
             if (sourceLine.getMnemonic().toUpperCase().equals("END")) {

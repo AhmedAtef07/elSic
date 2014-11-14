@@ -76,12 +76,15 @@ public final class Constants {
         INVALID_HEX,
         INVALID_HEX_REPRESENTATION,
         INVALID_OPERAND,
+        INVALID_START_ADDRESS,
         INVALID_WORD_OPERAND,
         MISSING_MNEMONIC, 
         MISSING_OPERAND,
+        MISSING_START,
         UNCLOSED_QUOTE,
         UNDEFINED_LABEL,  
         UNRECOGNIZED_MNEMONIC,
+        WORD_OPERAND_OUT_OF_RANGE,
     }
     
     public static final TreeMap<Errors, String> ErrorMessages = new TreeMap<>();
@@ -99,17 +102,24 @@ public final class Constants {
                 "Number of hex digits must be even");
         ErrorMessages.put(Errors.INVALID_OPERAND, 
                 "Invalid operand");
+        ErrorMessages.put(Errors.INVALID_START_ADDRESS, 
+                "Start address must be a hexadecimal number");
         ErrorMessages.put(Errors.INVALID_WORD_OPERAND, 
                 "Word operand must be a decimal integer");
         ErrorMessages.put(Errors.MISSING_MNEMONIC, 
                 "Can not find the mnemonic");
         ErrorMessages.put(Errors.MISSING_OPERAND, 
                 "Can not find the operand");
+        ErrorMessages.put(Errors.MISSING_START, 
+                "Program must begin with start statment");        
         ErrorMessages.put(Errors.UNCLOSED_QUOTE, 
                 "Can not find closing quote for byte operand");
         ErrorMessages.put(Errors.UNDEFINED_LABEL, 
                 "Undefined symbol in operand");
         ErrorMessages.put(Errors.UNRECOGNIZED_MNEMONIC, 
                 "Unrecognized menmonic");
+        ErrorMessages.put(Errors.WORD_OPERAND_OUT_OF_RANGE, 
+                "Word operand is out of range (max 2^24-1)");
+        
     }
 }
