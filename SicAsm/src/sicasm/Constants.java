@@ -68,14 +68,15 @@ public final class Constants {
         OpTable.put("WD", 0xDC);
     }
     
-    public static enum Errors {
-        // Sorted in alphabetical order.       
+    public enum Errors {
+        // Sorted in alphabetical order.           
         DUPLICATE_LABEL,
         DUPLICATE_START,
-        ILLEGAL_BYTE_OPERAND,
-        ILLEGAL_HEX,
-        ILLEGAL_OPERAND,
-        ILLEGAL_WORD_OPERAND,
+        INVALID_BYTE_OPERAND,
+        INVALID_HEX,
+        INVALID_HEX_REPRESENTATION,
+        INVALID_OPERAND,
+        INVALID_WORD_OPERAND,
         MISSING_MNEMONIC, 
         MISSING_OPERAND,
         UNCLOSED_QUOTE,
@@ -88,16 +89,27 @@ public final class Constants {
     static {
         ErrorMessages.put(Errors.DUPLICATE_LABEL, 
                 "Duplicate or misplaced start statement");
-        ErrorMessages.put(Errors.DUPLICATE_START, "");
-        ErrorMessages.put(Errors.ILLEGAL_BYTE_OPERAND, "");
-        ErrorMessages.put(Errors.ILLEGAL_HEX,
+        ErrorMessages.put(Errors.DUPLICATE_START, 
+                "Start statment must exist once and in the first line");
+        ErrorMessages.put(Errors.INVALID_BYTE_OPERAND, 
+                "Invalid byte operand");
+        ErrorMessages.put(Errors.INVALID_HEX, 
+                "Expected valid hexadecimal number in operand");
+        ErrorMessages.put(Errors.INVALID_HEX_REPRESENTATION,
                 "Number of hex digits must be even");
-        ErrorMessages.put(Errors.ILLEGAL_OPERAND, "");
-        ErrorMessages.put(Errors.ILLEGAL_WORD_OPERAND, "");
-        ErrorMessages.put(Errors.MISSING_MNEMONIC, "");
-        ErrorMessages.put(Errors.MISSING_OPERAND, "");
-        ErrorMessages.put(Errors.UNCLOSED_QUOTE, "");
-        ErrorMessages.put(Errors.UNDEFINED_LABEL, "");
-        ErrorMessages.put(Errors.UNRECOGNIZED_MNEMONIC, "");
+        ErrorMessages.put(Errors.INVALID_OPERAND, 
+                "Invalid operand");
+        ErrorMessages.put(Errors.INVALID_WORD_OPERAND, 
+                "Word operand must be a decimal integer");
+        ErrorMessages.put(Errors.MISSING_MNEMONIC, 
+                "Can not find the mnemonic");
+        ErrorMessages.put(Errors.MISSING_OPERAND, 
+                "Can not find the operand");
+        ErrorMessages.put(Errors.UNCLOSED_QUOTE, 
+                "Can not find closing quote for byte operand");
+        ErrorMessages.put(Errors.UNDEFINED_LABEL, 
+                "Undefined symbol in operand");
+        ErrorMessages.put(Errors.UNRECOGNIZED_MNEMONIC, 
+                "Unrecognized menmonic");
     }
 }

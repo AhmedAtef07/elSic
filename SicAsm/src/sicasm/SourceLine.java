@@ -1,5 +1,7 @@
 package sicasm;
 
+import java.util.ArrayList;
+
 public class SourceLine {
     private String label, 
                    mnemonic, 
@@ -63,8 +65,17 @@ public class SourceLine {
     public void addError(Constants.Errors error) {
         errors |= 1 << error.ordinal();
     }
-
-    public int getErrors() {
-        return errors;
+    
+    public ArrayList<Constants.Errors> getErrorsList() {
+        if (errors == 0) {
+            return null;
+        }
+        ArrayList<Constants.Errors> errorMessages = new ArrayList<>();
+        for (int i = 0; i < 30; i++) {
+            if ((errors & (1 << i)) != 0) {
+                errorMessages.add(Constants.Errors.values()[i]);                        
+            }
+        }
+        return errorMessages;
     }    
 }
