@@ -102,8 +102,12 @@ public class SourceFile {
                 quotes++;
                 flag = true;
             }
+        if (line.charAt(starting) == 'x' || line.charAt(starting) == 'X')
+            flag = false;
         for (i = starting + 2; i < line.length(); i++) {
             ret.append(line.charAt(i));
+            if (!flag && line.charAt(i) == 39)
+                return new StringandNext(ret.toString(), i + 1, line);
             if (line.charAt(i) == 39)
                 quotes--;
             if (quotes == 0 && flag)
