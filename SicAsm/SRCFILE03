@@ -1,0 +1,47 @@
+atef     start   1000
+         ldx     zero
+loop     lda     i
+         add     one
+         sta     i
+         comp    number
+         jeq     printyes
+         jsub    getmod
+         j       loop
+.b
+getmod   lda     number
+         div     i
+         mul     i
+         sta     tempi
+         lda     number
+         sub     tempi
+         comp    zero         
+         jeq     printno
+         rsub
+.b
+printno  td      outdev
+         jeq     printno         
+         ldch    notprime,x
+         wd      outdev
+         tix     length
+         jlt     printno
+         j       exit
+.b
+printyes td      outdev
+         jeq     printyes         
+         ldch    yesprime,x
+         wd      outdev
+         tix     length
+         jlt     printyes
+         j       exit
+number   word    7
+i        word    1
+tempi    resw    1
+zero     word    0
+one      word    1
+yesprime byte    c'it is prime  :P'
+notprime byte    c'is not prime :('
+length   word    15
+indev    byte    x'f3'
+outdev   byte    x'06'    
+ansmod   resw    1
+exit     end     atef

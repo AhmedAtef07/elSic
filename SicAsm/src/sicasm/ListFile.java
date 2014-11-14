@@ -103,9 +103,11 @@ public final class ListFile {
                     }
                 }
             } else if (menomonic.equals("RESW")) {
+                // Check if it fits in memory size.
                 locationCounter += Integer.parseInt(
                         sourceLine.getOperand()) * 3;
             } else if (menomonic.equals("RESB")) {
+                // Check if it fits in memory size.
                 locationCounter += Integer.parseInt(sourceLine.getOperand());
             } else {
                 sourceLine.addError(Constants.Errors.UNRECOGNIZED_MNEMONIC);
@@ -209,7 +211,7 @@ public final class ListFile {
             } else if (menomonic.equals("RESW")) {
             } else if (menomonic.equals("RESB")) {
             } else {
-                // Error undefined mneomonic.
+                // Error undefined mneomonic. Error added in pass one.
                 System.out.println("Error");
             }
             sourceLine.setObjectCode(objectCode);            
@@ -243,7 +245,7 @@ public final class ListFile {
         return 7;
     }
     
-    public void export() throws FileNotFoundException {
+    private void export() throws FileNotFoundException {
         String lines = "ElSic Assembler 1.0\n";
         DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
         lines += "Generated: " + dateFormat.format(new Date()) + "\n\n";

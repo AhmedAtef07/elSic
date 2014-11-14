@@ -1,52 +1,58 @@
 ElSic Assembler 1.0
-Generated: 2014/11/14 23:27:22
+Generated: 2014/11/14 23:56:36
 
-0000        atef      start  1000         
-1000 041066           ldx    zero         
-1003 001060 loop      lda    i            
-1006 181069           add    one          this is a comment
-1009 0C1060           sta    i            
-100C 28105D           comp   number       
-100F 301048           jeq    printyes     
-1012 481018           jsub   getmod       
-1015 3C1003           j      loop         
+0000        atef      start  1000                 
+1000 041066           ldx    zero                 
+1003 001060 loop      lda    i                    
+1006 181069           add    one                  
+1009 0C1060           sta    i                    
+100C 28105D           comp   number               
+100F 301048           jeq    printyes             
+1012 481018           jsub   getmod               
+1015 3C1003           j      loop                 
             .b
-1018 00105D getmod    lda    number       
-101B 241060           div    i            
-101E 201060           mul    i            
-1021 0C1063           sta    tempi        
-1024 00105D           lda    number       
-1027 1C1063           sub    tempi        
-102A 281066           comp   zero         
-102D 301033           jeq    printno      
-1030 4C0000           rsub                
+1018 00105D getmod    lda    number               
+101B 241060           div    i                    
+101E 201060           mul    i                    
+1021 0C1063           sta    tempi                
+1024 00105D           lda    number               
+1027 1C1063           sub    tempi                
+102A 281066           comp   zero                 
+102D 301033           jeq    printno              
+1030 4C0000           rsub                        
             .b
-1033 E01076 printno   td     outdev       
-1036 301033           jeq    printno      
-1039 50906F           ldch   notprime,x   this is the longest line
-103C DC1076           wd     outdev       
-103F 2C1072           tix    length       
-1042 381033           jlt    printno      
-1045 3C105D           j      number       
+1033 E0108E printno   td     outdev               
+1036 301033           jeq    printno              
+1039 50907B           ldch   notprime,x           
+103C DC108E           wd     outdev               
+103F 2C108A           tix    length               
+1042 381033           jlt    printno              
+1045 3C1092           j      exit                 
             .b
-1048 E01076 printyes  td     outdev       
-104B 301048           jeq    printyes     
-104E 50906C           ldch   yesprime,x   
-1051 DC1076           wd     outdev       
-1054 2C1072           tix    length       
-1057 381048           jlt    printyes     
-105A 3C105D           j      number       
-105D 000007 number    word   7            
-1060 000001 i         word   1            
-1063        tempi     resw   1            
-1066 000000 zero      word   0            
-1069 0001F4 one       word   500          
-106C 617364 yesprime  byte   c'asd'       
-106F 6E6D72 notprime  byte   c'nmr'       
-1072 00000F length    word   15           
-1075 F3     indev     byte   x'f3'        
-1076 06     outdev    byte   x'06'        
-1077        ansmod    resw   1            
-107A        res1      resb   80           
-10CA 000007           word   7            
-10CD                  end    atef         
+1048 E0108E printyes  td     outdev               
+104B 301048           jeq    printyes             
+104E 50906C           ldch   yesprime,x           
+1051 DC108E           wd     outdev               
+1054 2C108A           tix    length               
+1057 381048           jlt    printyes             
+105A 3C1092           j      exit                 
+105D 000007 number    word   7                    
+1060 000001 i         word   1                    
+1063        tempi     resw   1                    
+1066 000000 zero      word   0                    
+1069 000001 one       word   1                    
+106C 697420 yesprime  byte   c'it is prime  :P'   
+     697320
+     707269
+     6D6520
+     203A50
+107B 697320 notprime  byte   c'is not prime :('   
+     6E6F74
+     207072
+     696D65
+     203A28
+108A 00000F length    word   15                   
+108D F3     indev     byte   x'f3'                
+108E 06     outdev    byte   x'06'                
+108F        ansmod    resw   1                    
+1092        exit      end    atef                 

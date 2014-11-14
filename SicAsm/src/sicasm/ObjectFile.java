@@ -6,21 +6,24 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 
-public class ObjectFile {
-
-    private ArrayList<SourceLine> sourceLines;
-    private Boolean canProcess;
-    private int startAddress,
-                programLength;
-    public ObjectFile(String sourceFile) throws IOException {
-        ListFile listFile = new ListFile(sourceFile, true);
+public final class ObjectFile {
+    
+    private final ArrayList<SourceLine> sourceLines;
+    private final Boolean canProcess;
+    private final int startAddress,
+                      programLength;
+    
+    public ObjectFile(String sourceFile, Boolean generateListFile) 
+            throws IOException {
+        ListFile listFile = new ListFile(sourceFile, generateListFile);
         sourceLines = listFile.getSourceLines();
         canProcess = !listFile.getErrorsExist();
         startAddress = listFile.getStartAddress();
         programLength = listFile.getProgramLength();
+        export();
     }
     
-    public void export() throws FileNotFoundException {
+    private void export() throws FileNotFoundException {
         if (!canProcess) {
             System.out.println("SRCFILE is not a good file!");
             PrintWriter pw = new PrintWriter(new File("OBJFILE"));
@@ -46,8 +49,7 @@ public class ObjectFile {
                         startAddress,
                         programLength);                        
                 continue;               
-            }   
-            
+            }             
             if (sourceLine.getMnemonic().equalsIgnoreCase("RESW") || 
                 sourceLine.getMnemonic().equalsIgnoreCase("RESB") ||
                 lineNumber == sourceLines.size() - 1) {                
@@ -74,7 +76,6 @@ public class ObjectFile {
             }
             record += sourceLine.getObjectCode();
         }
-        System.out.println(lineNumber + " " + (sourceLines.size() - 1));
         lines += String.format("E%06X\n", startAddress);
         PrintWriter pw = new PrintWriter(new File("OBJFILE"));
         pw.print(lines);
