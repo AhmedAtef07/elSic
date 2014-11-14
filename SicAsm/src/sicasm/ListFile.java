@@ -14,6 +14,7 @@ public final class ListFile {
     int instructionCounter;
     TreeMap<String, Integer> symTable;
     public ListFile(String sourceFileName) throws IOException {
+        SourceLine.resetMaxLength();
         SourceFile sourceFile = new SourceFile(sourceFileName);
         sourceLines = sourceFile.getTokenz();
         symTable = new TreeMap<>();
@@ -21,7 +22,6 @@ public final class ListFile {
         
         passOne();
         passTwo();
-        //setStartAddress();
     }
     
     private Boolean isHexInteger(String s) {
@@ -33,21 +33,8 @@ public final class ListFile {
             }
         }
         return true;
-    }
+    }    
     
-    private void setStartAddress() {
-        if (sourceLines.get(0).getMnemonic().equalsIgnoreCase("START")) {
-            String operand = sourceLines.get(0).getOperand();
-            if (isHexInteger(operand)) {
-                locationCounter = Integer.parseInt(operand, 16);
-            } else {
-                locationCounter = 0;
-                // throw some error becuase the operand is not a number.
-            }
-        } else {
-            locationCounter = 0;
-        }
-    }
     private void passOne() {
         int lineNumber = 0;
         for (SourceLine sourceLine : sourceLines) {
@@ -62,14 +49,15 @@ public final class ListFile {
                 } else {
                     symTable.put(sourceLine.getLabel(), locationCounter);                    
                 }
-            }            
+            }         
+            String menomonic = sourceLine.getMnemonic().toUpperCase();
             // Handeling Mnemonics and directives.
-            if (Constants.OpTable.containsKey(
-                    sourceLine.getMnemonic().toUpperCase())) {
+            if (Constants.OpTable.containsKey(menomonic)) {
                 locationCounter += 3;
-            } else if (sourceLine.getMnemonic().equalsIgnoreCase("START")) {
+            } else if (menomonic.equals("START")) {
                 if (lineNumber != 1) {
                     // Error misplaces start.
+                    sourceLine.addError(Constants.Errors.DUPLICATE_START);
                     continue;
                 }
                 String operand = sourceLines.get(0).getOperand();
@@ -80,13 +68,14 @@ public final class ListFile {
                     }
                 } else {
                     locationCounter = 0;
+                    
                     // throw some error becuase the operand is not a number.
                 }                 
-            } else if (sourceLine.getMnemonic().equalsIgnoreCase("END")) {
-                
-            } else if (sourceLine.getMnemonic().equalsIgnoreCase("WORD")) {
+            } else if (menomonic.equals("END")) {
+                return;
+            } else if (menomonic.equals("WORD")) {
                 locationCounter += 3;
-            } else if (sourceLine.getMnemonic().equalsIgnoreCase("BYTE")) {
+            } else if (menomonic.equals("BYTE")) {
                 String op = sourceLine.getOperand();
                 if (op.charAt(0) == 'c' || op.charAt(0) == 'C') {
                     locationCounter += op.length() - 3;
@@ -95,16 +84,18 @@ public final class ListFile {
                     if (hexLength % 2 == 0) {
                         locationCounter += hexLength / 2;
                     } else {
-                        // ERROR IT MUST BE EVEN!!!!!!!
+                        // Error number of digits must be even.
                     }
                 }
-            } else if (sourceLine.getMnemonic().equalsIgnoreCase("RESW")) {
+            } else if (menomonic.equals("RESW")) {
                 locationCounter += Integer.parseInt(
                         sourceLine.getOperand()) * 3;
-            } else if (sourceLine.getMnemonic().equalsIgnoreCase("RESB")) {
+            } else if (menomonic.equals("RESB")) {
                 locationCounter += Integer.parseInt(sourceLine.getOperand());
             } else {
                 // Error undefined mneomonic!!!!!!
+                sourceLine.addError(Constants.Errors.UNRECOGNIZED_MNEMONIC);
+                System.out.println(menomonic);
                 System.out.println("Error");
             }
         }
@@ -117,59 +108,95 @@ public final class ListFile {
             }                    
             // TODO(AhmedAtef07): Convert following else ifs into switch case.
             // TODO(AhmedAtef07): Check ignore case or all to upper.
-            String thisObjectCode = "";            
+            String objectCode = "";   
+            String menomonic = sourceLine.getMnemonic().toUpperCase();
+            String operand = sourceLine.getOperand();
+          
+            
+            if (operand.isEmpty() && !menomonic.equals("RSUB")) {
+                sourceLine.addError(Constants.Errors.MISSING_OPERAND);
+            }
             // Handeling Mnemonics and directives.
-            if (Constants.OpTable.containsKey(
-                    sourceLine.getMnemonic().toUpperCase())) {
-                thisObjectCode = Constants.OpTable.get(
-                        sourceLine.getMnemonic().toUpperCase());
-                thisObjectCode += Integer.toHexString(
-                        symTable.get(sourceLine.getOperand())).toUpperCase();
-                System.out.println(symTable.get(sourceLine.getOperand()));
-            } else if (sourceLine.getMnemonic().equalsIgnoreCase("START")) {
-                // Set error in case of duplication, or not first line.
-            } else if (sourceLine.getMnemonic().equalsIgnoreCase("END")) {
-                // Terminate proccessing. and there should not be any END here
-                // as pass one should not process any further.
-            } else if (sourceLine.getMnemonic().equalsIgnoreCase("WORD")) {
-                if (isValidWordOperand(sourceLine.getOperand())) {
-                    thisObjectCode = String.format(
-                            "%06X", Integer.parseInt(sourceLine.getOperand()));                    
+            if (Constants.OpTable.containsKey(menomonic)) {
+                int hexCode = Constants.OpTable.get(menomonic) << 16;                 
+                if (operand.endsWith(",x") || operand.endsWith(",X")) {
+                    if (symTable.containsKey(operand.substring(0,
+                            operand.length() - 2))) {
+                        int operandNum = symTable.get(operand.substring(0, 
+                                operand.length() - 2));
+                        operandNum |= 1 << 15;      
+                        hexCode |= operandNum;                        
+                        objectCode = String.format("%06X", hexCode);                 
+                    } else {
+                        // Undefined label. Show which label is not defined.
+                        sourceLine.addError(Constants.Errors.UNDEFINED_LABEL);
+                    }                  
+                } else if (menomonic.equals("RSUB")) {
+                    // Does not need an operand.
+                    objectCode = String.format("%06X", hexCode); 
+                } else if (symTable.containsKey(operand)) {
+                    int operandNum = symTable.get(operand);
+                    hexCode |= operandNum;
+                    objectCode = String.format("%06X", hexCode);          
                 } else {
-                     // Invalid word operand.
-                }                
-            } else if (sourceLine.getMnemonic().equalsIgnoreCase("BYTE")) {
+                    System.out.println(operand + " " + 
+                            symTable.get(operand));
+                    objectCode = "";
+                    // Undefined label. Show which label is not defined.
+                    sourceLine.addError(Constants.Errors.UNDEFINED_LABEL);
+                }
+            } else if (menomonic.equals("START")) {
+                // Error was already set in pass one in case of duplicates.
+            } else if (menomonic.equals("END")) {
+                // Terminate proccessing. 
+                sourceLine.setObjectCode(objectCode);
+                break;
+            } else if (menomonic.equals("WORD")) {
+                if (isValidWordOperand(operand) == 7) {
+                    objectCode = String.format(
+                            "%06X", Integer.parseInt(operand));           
+                } else if (isValidWordOperand(operand) == 1) {
+                    // Number out of range              
+                } else {
+                    // Invalid word operand.
+                    sourceLine.addError(Constants.Errors.INVALID_WORD_OPERAND);
+                }              
+            } else if (menomonic.equals("BYTE")) {
                 // Check there are no flag for unclosed quote.
-                String op = sourceLine.getOperand();
-                if (isValidByteOperand(op)) {                    
-                    if (op.charAt(0) == 'c' || op.charAt(0) == 'C') {
-                        for (int i = 2; i < op.length() - 1; i++) {
-                            thisObjectCode += Integer.toHexString(
-                                    (int)op.charAt(i)).toUpperCase();
+                if (isValidByteOperand(operand)) {                    
+                    if (operand.charAt(0) == 'c' || operand.charAt(0) == 'C') {
+                        for (int i = 2; i < operand.length() - 1; i++) {
+                            objectCode += String.format(
+                                    "%02X", (int)operand.charAt(i));                             
                         }
-                    } else if (op.charAt(0) == 'x' || op.charAt(0) == 'X') {
-                        String hexNumber = op.substring(2, op.length() - 1);
+                    } else if (operand.charAt(0) == 'x' || 
+                               operand.charAt(0) == 'X') {
+                        String hexNumber = operand.substring(
+                                2, operand.length() - 1);
                         if (isHexInteger(hexNumber)) {     
-                            int hexLength = op.length() - 3;
+                            int hexLength = operand.length() - 3;
                             if (hexLength % 2 == 0) {
-                                thisObjectCode = hexNumber.toUpperCase();
+                                objectCode = hexNumber.toUpperCase();
                             } else {
-                                // ERROR IT MUST BE EVEN!!!!!!!
+                                sourceLine.addError(Constants.Errors.
+                                        INVALID_HEX_REPRESENTATION);
                             }
                         } else {
                             // Not valid Hex.
+                            sourceLine.addError(Constants.Errors.INVALID_HEX);
                         }
                     }
                 } else {
                     // Invalid Byte operand.
+                    sourceLine.addError(Constants.Errors.INVALID_BYTE_OPERAND);
                 }
-            } else if (sourceLine.getMnemonic().equalsIgnoreCase("RESW")) {
-            } else if (sourceLine.getMnemonic().equalsIgnoreCase("RESB")) {
+            } else if (menomonic.equals("RESW")) {
+            } else if (menomonic.equals("RESB")) {
             } else {
-                // Error undefined mneomonic!!!!!!
+                // Error undefined mneomonic.
                 System.out.println("Error");
             }
-            sourceLine.setObjectCode(thisObjectCode);
+            sourceLine.setObjectCode(objectCode);
         }
     }
     
@@ -184,39 +211,57 @@ public final class ListFile {
         return true;
     }
     
-    private Boolean isValidWordOperand(String operand) {
+    private int isValidWordOperand(String operand) {
         for (int i = 0; i < operand.length(); i++) {
             if (!(operand.charAt(i) >= '0' && operand.charAt(i) <= '9')){
-                return false;
+                return 0;
             }
         }
-        return Integer.parseInt(operand) <= 0xFFFFFF;
+        return Integer.parseInt(operand) <= 0xFFFFFF ? 7 : 1;
     }
     
     public void export() throws FileNotFoundException {
-        String lines = "";
+        String lines = "ElSic Assembler V1.0\n\n";
         for (SourceLine sourceLine : sourceLines) {
             if (sourceLine.getIsLineComment()) {
-                lines += "          " + sourceLine.getComment() + "\n";
+                lines += "            " + sourceLine.getComment() + "\n";
                 continue;
-            }
+            }            
             int it = 0;
+            ArrayList<Constants.Errors> errorsList = sourceLine.getErrorsList();
             String objectCode = sourceLine.getObjectCode();
-            String subObjectCode = objectCode.substring(
-                    it, it = Math.min(it + 6, objectCode.length()));
+            String subObjectCode;
+            if (errorsList == null) {
+                subObjectCode = objectCode.substring(
+                        it, it = Math.min(it + 6, objectCode.length()));
+            } else {
+                subObjectCode = "";
+            }
             
-            lines += String.format("%05d %04X %-6s %-8s %-7s %-8s %s\n", 
-                                   sourceLine.getAddressLocation(),    
-                                   sourceLine.getAddressLocation(),    
-                                   subObjectCode,
-                                   sourceLine.getLabel(), 
-                                   sourceLine.getMnemonic(), 
-                                   sourceLine.getOperand(), 
-                                   sourceLine.getComment()); 
+            lines += String.format(
+                    "%04X %-6s %-" + SourceLine.getLabelMaxLength() + "s  %-" + 
+                    SourceLine.getMnemonicMaxLength()+ "s  %-" + 
+                    SourceLine.getOperandMaxLength()+ "s  %s\n",
+                    sourceLine.getAddressLocation(),    
+                    subObjectCode,
+                    sourceLine.getLabel(), 
+                    sourceLine.getMnemonic(), 
+                    sourceLine.getOperand(), 
+                    sourceLine.getComment()); 
             while(it < objectCode.length()) {
                  subObjectCode = objectCode.substring(
                          it, it = Math.min(it + 6, objectCode.length()));   
-                 lines += "           " + subObjectCode + "\n";
+                 lines += "     " + subObjectCode + "\n";
+            }
+            if (errorsList != null) {
+                for (int i = 0; i < errorsList.size(); ++i) {
+                    lines += "  **** " +
+                             Constants.ErrorMessages.get(errorsList.get(i)) +
+                             ". ****n";
+                }
+            }
+            if (sourceLine.getMnemonic().toUpperCase().equals("END")) {
+                break;
             }
         }
         PrintWriter pw = new PrintWriter(new File("LISTFILE"));

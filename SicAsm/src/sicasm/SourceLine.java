@@ -10,7 +10,11 @@ public class SourceLine {
                    objectCode;
     private int addressLocation,
                 errors;
-    private Boolean isLineComment;    
+    private Boolean isLineComment;
+    
+    private static int labelMaxLength, 
+                       mnemonicMaxLength, 
+                       operandMaxLength;
     
     public SourceLine(String label, String mnemonic, String operand, 
                       String comment) {
@@ -19,6 +23,9 @@ public class SourceLine {
         this.operand = operand;
         this.comment = comment;
         isLineComment = false;
+        labelMaxLength = Math.max(labelMaxLength, label.length());
+        mnemonicMaxLength = Math.max(mnemonicMaxLength, mnemonic.length());
+        operandMaxLength = Math.max(operandMaxLength, operand.length());
     }
     
     public SourceLine(String comment) {
@@ -78,4 +85,20 @@ public class SourceLine {
         }
         return errorMessages;
     }    
+
+    public static int getLabelMaxLength() {
+        return labelMaxLength;
+    }
+
+    public static int getMnemonicMaxLength() {
+        return mnemonicMaxLength;
+    }
+
+    public static int getOperandMaxLength() {
+        return operandMaxLength;
+    }    
+    
+    public static void resetMaxLength() {
+        labelMaxLength = mnemonicMaxLength = operandMaxLength = 0;
+    }
 }
