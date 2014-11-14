@@ -4,7 +4,7 @@ import java.util.*;
 
 public final class Constants {
 
-    public static final TreeMap<String, String> OpTable = new TreeMap<String, String>();
+    public static final TreeMap<String, String> OpTable = new TreeMap<>();
 
     static {
         OpTable.put("ADD", "18");
@@ -68,8 +68,32 @@ public final class Constants {
         OpTable.put("WD", "DC");
     }
     
-    public enum Errors {
-        UNCLOSED_QUOTE, // 0 
-                
+    public static enum Errors {
+        // Sorted in alphabetical order.       
+        DUPLICATE_LABEL,
+        DUPLICATE_START,
+        ILLEGAL_HEX,
+        ILLEGAL_OPERAND,
+        MISSING_MNEMONIC, 
+        MISSING_OPERAND,
+        UNCLOSED_QUOTE,
+        UNDEFINED_LABEL,  
+        UNRECOGNIZED_MNEMONIC,
+    }
+    
+    public static final TreeMap<Errors, String> ErrorMessages = new TreeMap<>();
+    
+    static {
+        ErrorMessages.put(Errors.DUPLICATE_LABEL, 
+                "Duplicate or misplaced start statement");
+        ErrorMessages.put(Errors.DUPLICATE_START, "");
+        ErrorMessages.put(Errors.ILLEGAL_HEX,
+                "Number of hex digits must be even");
+        ErrorMessages.put(Errors.ILLEGAL_OPERAND, "");
+        ErrorMessages.put(Errors.MISSING_MNEMONIC, "");
+        ErrorMessages.put(Errors.MISSING_OPERAND, "");
+        ErrorMessages.put(Errors.UNCLOSED_QUOTE, "");
+        ErrorMessages.put(Errors.UNDEFINED_LABEL, "");
+        ErrorMessages.put(Errors.UNRECOGNIZED_MNEMONIC, "");
     }
 }
