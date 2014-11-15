@@ -9,15 +9,31 @@ public class SourceFile {
         return new ArrayList<SourceLine>(file);
     }
     private BufferedReader in;
-
-    public SourceFile(String filename) throws FileNotFoundException, IOException {
+    private HashSet<String> labels;
+    
+    void loadlabels(String filename) throws IOException {
         in = new BufferedReader(new FileReader(filename));
+        labels = new HashSet<String>();
+        String input;
+        StringandNext x;
+        while ((input = in.readLine()) != null) {
+            if ( input.isEmpty() || input.charAt(0) <= 32 
+                    || input.charAt(0) == 46 ) continue;
+            x = buildtospace(0, input);
+            labels.add(x.str);
+        }
+        in.close();
+    }
+    public SourceFile(String filename) throws FileNotFoundException, IOException {
+        
         file = new ArrayList<SourceLine>();
-        load();
+        loadlabels(filename);
+        load(filename);
     }
     private ArrayList<SourceLine> file;
 
-    private void load() throws IOException {
+    private void load(String filename) throws IOException {
+        in = new BufferedReader(new FileReader(filename));
         String input;
         String label, mnemonic, comment, operand;
         StringandNext temp;
@@ -77,6 +93,7 @@ public class SourceFile {
                 AXX.addError(Constants.Errors.UNCLOSED_QUOTE);
             file.add(AXX);
         }
+        in.close();
     }
     private boolean unclosedQuote;
 
@@ -106,6 +123,10 @@ public class SourceFile {
             flag = false;
         for (i = starting + 2; i < line.length(); i++) {
             ret.append(line.charAt(i));
+            if ( quotes == 0 && i + 1 < line.length() 
+                    && line.charAt(i+1) <= 32 
+                    && labels.contains(ret.toString()) )
+                return new StringandNext(ret.toString(),i+1,line);
             if (!flag && line.charAt(i) == 39)
                 return new StringandNext(ret.toString(), i + 1, line);
             if (line.charAt(i) == 39)
