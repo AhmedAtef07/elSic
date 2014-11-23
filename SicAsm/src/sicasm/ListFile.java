@@ -104,6 +104,7 @@ public final class ListFile {
                 }
             } else if (menomonic.equals("RESW")) {
                 // Check if it fits in memory size.
+                // Check if it is a valid positive integer.
                 locationCounter += Integer.parseInt(
                         sourceLine.getOperand()) * 3;
             } else if (menomonic.equals("RESB")) {
@@ -169,8 +170,14 @@ public final class ListFile {
                 break;
             } else if (menomonic.equals("WORD")) {
                 if (isValidWordOperand(operand) == 7) {
-                    objectCode = String.format(
-                            "%06X", Integer.parseInt(operand));           
+                    String hexCode = String.format("%06X", Integer.parseInt(
+                            operand));
+                    // Java integer is 4 bytes, SIC's is 3 bytes.
+                    // In case of negative number, the hex representation will 
+                    // be in 2's complement of 4 bytes, so only 3 bytes are 
+                    // taken from the right.
+                    objectCode = hexCode.substring(Math.max(0, 
+                            hexCode.length() - 6), hexCode.length());           
                 } else if (isValidWordOperand(operand) == 1) {
                     // Number out of range  
                     sourceLine.addError(
@@ -233,11 +240,13 @@ public final class ListFile {
     
     private int isValidWordOperand(String operand) {
         for (int i = 0; i < operand.length(); i++) {
+            if (i == 0 && operand.charAt(0) == '-') continue;
             if (!(operand.charAt(i) >= '0' && operand.charAt(i) <= '9')){
                 return 0;
             }
         }
         BigInteger big = new BigInteger(operand);
+        big = big.abs();
         BigInteger maxInt = new BigInteger(0xFFFFFF + "");
         if (big.compareTo(maxInt) == 1) {
             return 1;
