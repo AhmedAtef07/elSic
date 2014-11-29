@@ -18,11 +18,13 @@ public final class ListFile {
                 programLength;
     private TreeMap<String, Integer> symTable;
     private Boolean errorsExist;
+    private String fileDir;
             
     public ListFile(String sourceFileName, Boolean gerenateListFile) 
             throws IOException {
         SourceLine.resetMaxLength();
         SourceFile sourceFile = new SourceFile(sourceFileName);
+        fileDir = new File(sourceFileName).getParent();
         sourceLines = sourceFile.getTokenz();
         symTable = new TreeMap<>();
         errorsExist = false;
@@ -362,7 +364,7 @@ public final class ListFile {
                 break;
             }
         }
-        PrintWriter pw = new PrintWriter(new File("LISTFILE"));
+        PrintWriter pw = new PrintWriter(new File(fileDir + "\\LISTFILE"));
         pw.print(lines);
         pw.flush();
         pw.close();

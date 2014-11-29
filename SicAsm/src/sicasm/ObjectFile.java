@@ -12,10 +12,12 @@ public final class ObjectFile {
     private final Boolean errorsExist;
     private final int startAddress,
                       programLength;
+    private final String fileDir;
     
     public ObjectFile(String sourceFile, Boolean generateListFile) 
             throws IOException {
         ListFile listFile = new ListFile(sourceFile, generateListFile);
+        fileDir = new File(sourceFile).getParent();
         sourceLines = listFile.getSourceLines();
         errorsExist = !listFile.getErrorsExist();
         startAddress = listFile.getStartAddress();
@@ -26,7 +28,8 @@ public final class ObjectFile {
     private void export() throws FileNotFoundException {
         if (!errorsExist) {
             System.out.println("Source file contains errors!");
-            PrintWriter pw = new PrintWriter(new File("OBJFILE"));
+            PrintWriter pw = new PrintWriter(new File(fileDir + "\\OBJFILE"));
+            // new File(null)
             pw.print("Check LISTFILE - SRCFILE contains errors.");
             pw.flush();
             pw.close();
