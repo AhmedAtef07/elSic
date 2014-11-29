@@ -84,10 +84,12 @@ public final class ListFile {
                 startExist = true;
                 String operand = sourceLine.getOperand();
                 if (isHexInteger(operand)) {
-                    locationCounter = Integer.parseInt(operand, 16);
-                    startAddress = locationCounter;
-                    if (locationCounter >= 0x8000) {
-                        // Out of memeory 
+                    if(isInRange(operand, 16, 0x8000)) {
+                        locationCounter = Integer.parseInt(operand, 16);
+                        startAddress = locationCounter;
+                    } else {
+                        sourceLine.addError(
+                                Constants.Errors.INVALID_ADDRESS_LOCATION);
                     }
                 } else {
                     locationCounter = 0;
