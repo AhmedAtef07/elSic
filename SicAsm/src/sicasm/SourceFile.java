@@ -69,7 +69,7 @@ public class SourceFile {
             temp = buildtospace(i, input);
             i = temp.next;
             mnemonic = temp.str;
-            if (is_C_or_X(i, input))
+            if (is_C_or_X(i, input)&&mnemonic.equalsIgnoreCase("byte"))
                 temp = buildwithquote(i, input);
             else
                 temp = buildtospace(i, input);
@@ -89,7 +89,7 @@ public class SourceFile {
                 operand = "";
             }
             SourceLine AXX = new SourceLine(label, mnemonic, operand, comment);
-            if (unclosedQuote&&label.equalsIgnoreCase("byte"))
+            if (unclosedQuote&&mnemonic.equalsIgnoreCase("byte"))
                 AXX.addError(Constants.Errors.UNCLOSED_QUOTE);
             file.add(AXX);
         }
