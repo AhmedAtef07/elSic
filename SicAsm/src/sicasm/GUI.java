@@ -9,7 +9,10 @@ package sicasm;
  *
  * @author user
  */
+//import com.sun.javafx.css.Rule;
 import java.awt.BorderLayout;
+import java.awt.FlowLayout;
+import java.awt.Font;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -17,6 +20,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.util.Scanner;
+import javax.swing.Box;
 
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
@@ -35,13 +39,16 @@ public class GUI extends JFrame {
 	JButton Clear = new JButton("Clear");
 	JButton Save = new JButton("Save");
 	JButton Load= new JButton("Load");
-	JTextArea input = new JTextArea(50,50);
-	JScrollPane scroll = new JScrollPane(input,JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        //private Rule columnView;
+        //private Rule rowView;
+	JTextArea input = new JTextArea(30,70);
+	JScrollPane scroll ;//= new JScrollPane(input);//,JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
 	JFileChooser chooser = new JFileChooser();
 	JPanel p= new JPanel();
 	JPanel west = new JPanel();
 	JPanel south = new JPanel();
 	JLabel status = new JLabel();
+        JFrame frame = new JFrame();
 	
 		
 	// constructor
@@ -49,11 +56,17 @@ public class GUI extends JFrame {
 	{
 		super("Assember Application");
 		setSize(700,700);
+                scroll = new JScrollPane(input);
+                scroll.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
 		setResizable(true);
 		setDefaultCloseOperation(EXIT_ON_CLOSE);
+                p.setLayout(new FlowLayout());
+                //setLayout (new FlowLayout());
+                p.setSize(200,200);
 		input.setEditable(true);
 		input.setLineWrap(true);
 		input.setWrapStyleWord(true);
+                input.setFont(new Font("monospaced", Font.PLAIN, 12));
 		LisFile.addActionListener(new ActionListener() {
 			 
             public void actionPerformed(ActionEvent e)
@@ -100,8 +113,9 @@ public class GUI extends JFrame {
                Loading();
             }
         });  
-		p.add(input);
+		//p.add(input);
 		p.add(scroll);
+               // p.add( Box.createVerticalStrut(400) );
 		west.setLayout(new GridLayout(10,1));
 		west.add(Clear);
 		west.add(Save);
@@ -115,6 +129,7 @@ public class GUI extends JFrame {
 		add(south,BorderLayout.SOUTH);
 		add(p,BorderLayout.CENTER);
 		setVisible(true);
+                //frame.setVisible(true);
 		
 	}
 	public void Loading(){
