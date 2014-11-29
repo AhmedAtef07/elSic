@@ -21,6 +21,7 @@ import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.util.Scanner;
 import javax.swing.Box;
+import javax.swing.ImageIcon;
 
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
@@ -33,8 +34,8 @@ import javax.swing.JTextArea;
 
 public class GUI extends JFrame {
 
-	JButton LisFile = new JButton("List File");
-	JButton ObjFile = new JButton("Object File");  
+	//JButton LisFile = new JButton("List File");
+	//JButton ObjFile = new JButton("Object File");  
 	JButton Run = new JButton("Run Assembler");
 	JButton Clear = new JButton("Clear");
 	JButton Save = new JButton("Save");
@@ -55,32 +56,34 @@ public class GUI extends JFrame {
 	GUI()
 	{
 		super("Assember Application");
-		setSize(700,700);
+		setSize(1200,600);
                 scroll = new JScrollPane(input);
                 scroll.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
 		setResizable(true);
 		setDefaultCloseOperation(EXIT_ON_CLOSE);
-                p.setLayout(new FlowLayout());
-                //setLayout (new FlowLayout());
+                 setLayout(new BorderLayout());
+                setContentPane(new JLabel(new ImageIcon("Boston-City.jpg")));
+                //p.setLayout(new FlowLayout());
+                setLayout (new FlowLayout());
                 p.setSize(200,200);
 		input.setEditable(true);
 		input.setLineWrap(true);
 		input.setWrapStyleWord(true);
                 input.setFont(new Font("monospaced", Font.PLAIN, 12));
-		LisFile.addActionListener(new ActionListener() {
+	/*	LisFile.addActionListener(new ActionListener() {
 			 
             public void actionPerformed(ActionEvent e)
             {
-                System.out.println("You clicked the button");
+                
             }
         }); 
 		ObjFile.addActionListener(new ActionListener() {
 			 
             public void actionPerformed(ActionEvent e)
             {
-                System.out.println("You clicked the button");
+                
             }
-        });   
+        });*/   
 		Run.addActionListener(new ActionListener() {
 			 
             public void actionPerformed(ActionEvent e)
@@ -116,16 +119,16 @@ public class GUI extends JFrame {
 		//p.add(input);
 		p.add(scroll);
                // p.add( Box.createVerticalStrut(400) );
-		west.setLayout(new GridLayout(10,1));
+		west.setLayout(new GridLayout(4,1));
 		west.add(Clear);
 		west.add(Save);
 		west.add(Load);
-		west.add(LisFile);
-		west.add(ObjFile);
+		//west.add(LisFile);
+		//west.add(ObjFile);
 		west.add(Run);
 		status.setText("Waiting");
 		south.add(status);
-		add(west,BorderLayout.WEST);
+		add(west);
 		add(south,BorderLayout.SOUTH);
 		add(p,BorderLayout.CENTER);
 		setVisible(true);
@@ -146,7 +149,8 @@ public class GUI extends JFrame {
 			}
 			catch (FileNotFoundException ex)
 			{
-				JOptionPane.showMessageDialog(this,"File");
+				//JOptionPane.showMessageDialog(this,"File");
+                            status.setText("Couldn't be loaded");
 			}
 		}
 	}
