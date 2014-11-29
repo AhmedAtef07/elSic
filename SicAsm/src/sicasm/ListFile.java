@@ -49,21 +49,29 @@ public final class ListFile {
     }    
     
     private void passOne() {
-        int lineNumber = -1;
-        Boolean startExist = false;
+        int lineNumber = -1,
+            firstCodeLine = -1;
+        boolean startExist = false,
+                firstUnCommentedLineFound = false;
         for (SourceLine sourceLine : sourceLines) {
-            ++lineNumber;
+            if (!firstUnCommentedLineFound) ++firstCodeLine;
             if (sourceLine.getIsLineComment()) {
                 continue;
             }
+            firstUnCommentedLineFound = true;
+            ++lineNumber;
             sourceLine.setAddressLocation(locationCounter);
             // Adding labels into symTable.
             if (!sourceLine.getLabel().isEmpty()) {
-                if (symTable.containsKey(sourceLine.getLabel())) {
+                if (sourceLine.getLabel().charAt(0) == '0') {
+                    sourceLine.addError(
+                            Constants.Errors.LABEL_STARTING_WITH_ZERO);
+                } else if (symTable.containsKey(sourceLine.getLabel())) {
+                    sourceLine.addError(Constants.Errors.DUPLICATE_LABEL);
                 } else {
                     symTable.put(sourceLine.getLabel(), locationCounter);                    
                 }
-            }         
+            }
             String menomonic = sourceLine.getMnemonic().toUpperCase();
             // Handeling Mnemonics and directives.
             if (Constants.OpTable.containsKey(menomonic)) {
@@ -72,7 +80,6 @@ public final class ListFile {
                 if (lineNumber != 0) {
                     // Error misplaces start.
                     sourceLine.addError(Constants.Errors.DUPLICATE_START);
-                    continue;
                 }
                 startExist = true;
                 String operand = sourceLine.getOperand();
@@ -115,7 +122,8 @@ public final class ListFile {
             }
         }
         if (!startExist) {
-             sourceLines.get(0).addError(Constants.Errors.MISSING_START);
+             sourceLines.get(firstCodeLine).addError(
+                     Constants.Errors.MISSING_START);
         }
     }
     
@@ -123,45 +131,52 @@ public final class ListFile {
         for (SourceLine sourceLine : sourceLines) {
             if (sourceLine.getIsLineComment()) {
                 continue;
-            }                    
+            }
             
             String objectCode = "";   
             String menomonic = sourceLine.getMnemonic().toUpperCase();
             String operand = sourceLine.getOperand();
-          
             
             if (operand.isEmpty() && !menomonic.equals("RSUB")) {
                 sourceLine.addError(Constants.Errors.MISSING_OPERAND);
             }
             // Handeling Mnemonics and directives.
-            if (Constants.OpTable.containsKey(menomonic)) {
-                int hexCode = Constants.OpTable.get(menomonic) << 16;                 
-                if (operand.endsWith(",x") || operand.endsWith(",X")) {
-                    if (symTable.containsKey(operand.substring(0,
-                            operand.length() - 2))) {
-                        int operandNum = symTable.get(operand.substring(0, 
-                                operand.length() - 2));
-                        operandNum |= 1 << 15;      
-                        hexCode |= operandNum;                        
-                        objectCode = String.format("%06X", hexCode);                 
-                    } else {
-                        // Undefined label. Show which label is not defined.
-                        sourceLine.addError(Constants.Errors.UNDEFINED_LABEL);
-                    }                  
-                } else if (menomonic.equals("RSUB")) {
+            if (Constants.OpTable.containsKey(menomonic)) {                  
+                int hexCode = Constants.OpTable.get(menomonic) << 16; 
+                if (menomonic.equals("RSUB")) {
                     // Does not need an operand.
                     objectCode = String.format("%06X", hexCode); 
-                } else if (symTable.containsKey(operand)) {
-                    int operandNum = symTable.get(operand);
-                    hexCode |= operandNum;
-                    objectCode = String.format("%06X", hexCode);          
-                } else {
-                    System.out.println(operand + " " + 
-                            symTable.get(operand));
-                    objectCode = "";
-                    // Undefined label. Show which label is not defined.
-                    sourceLine.addError(Constants.Errors.UNDEFINED_LABEL);
-                }
+                } else {                
+                    boolean indexed = false;
+                    if (operand.endsWith(",x") || operand.endsWith(",X")) {
+                        indexed = true;
+                        operand = operand.substring(0, operand.length() - 2);
+                    }
+                    int operandNum;
+                    if (operand.charAt(0) == '0') {
+                        if (!isHexInteger(operand)) {
+                             sourceLine.addError(
+                                    Constants.Errors.INVALID_HEX);
+                             continue;
+                        } 
+                        if (!isInRange(operand, 16, 0xFFFF)) {                         
+                             sourceLine.addError(
+                                    Constants.Errors.INVALID_ADDRESS_LOCATION);
+                             continue;
+                        }  
+                        operandNum = Integer.parseInt(operand, 16);
+                    } else if (symTable.containsKey(operand)) {
+                        operandNum = symTable.get(operand);
+                    } else {
+                        // Undefined label. 
+                        // TODO(ahmedatef): Show which label is not defined.
+                        sourceLine.addError(Constants.Errors.UNDEFINED_LABEL);                                                
+                        continue;
+                    }          
+                    if (indexed) operandNum |= 1 << 15; 
+                    hexCode |= operandNum;                        
+                    objectCode = String.format("%06X", hexCode);
+                }                
             } else if (menomonic.equals("START")) {
                 // Error was already set in pass one in case of duplicates.
             } else if (menomonic.equals("END")) {
@@ -219,10 +234,9 @@ public final class ListFile {
             } else if (menomonic.equals("RESB")) {
             } else {
                 // Error undefined mneomonic. Error added in pass one.
-                System.out.println("Error");
             }
             sourceLine.setObjectCode(objectCode);            
-            errorsExist |= sourceLine.lineContainsErrors();
+            errorsExist |= sourceLine.containsErrors();
         }
         programLength = locationCounter - startAddress;
     }
@@ -245,13 +259,18 @@ public final class ListFile {
                 return 0;
             }
         }
-        BigInteger big = new BigInteger(operand);
-        big = big.abs();
-        BigInteger maxInt = new BigInteger(0xFFFFFF + "");
-        if (big.compareTo(maxInt) == 1) {
+        
+        if (!isInRange(operand, 10, 0x7FFFFF)) {
             return 1;
         }
         return 7;
+    }
+    
+    boolean isInRange(String number, int numberRadix, int range) {
+        BigInteger big = new BigInteger(number, numberRadix);
+        big = big.abs();
+        BigInteger maxInt = BigInteger.valueOf(range);
+        return big.compareTo(maxInt) != 1;
     }
     
     private void export() throws FileNotFoundException {
@@ -263,17 +282,17 @@ public final class ListFile {
             if (sourceLine.getIsLineComment()) {
                 lines += "            " + sourceLine.getComment() + "\n";
                 continue;
-            }            
+            }
             int it = 0;
             ArrayList<Constants.Errors> errorsList = sourceLine.getErrorsList();
             String objectCode = sourceLine.getObjectCode();
             String subObjectCode;
-            if (errorsList == null || (errorsList.size() == 1 && 
-                    errorsList.get(0).equals(Constants.Errors.MISSING_START))) {
+            if (errorsList == null) {
                 subObjectCode = objectCode.substring(
                         it, it = Math.min(it + 6, objectCode.length()));
             } else {
                 subObjectCode = "";
+                objectCode = "";
             }
             
             lines += String.format(

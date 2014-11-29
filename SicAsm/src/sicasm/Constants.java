@@ -72,6 +72,8 @@ public final class Constants {
         // Sorted in alphabetical order.           
         DUPLICATE_LABEL,
         DUPLICATE_START,
+        LABEL_STARTING_WITH_ZERO,
+        INVALID_ADDRESS_LOCATION,
         INVALID_BYTE_OPERAND,
         INVALID_HEX,
         INVALID_HEX_REPRESENTATION,
@@ -94,6 +96,10 @@ public final class Constants {
                 "Duplicate or misplaced start statement");
         ErrorMessages.put(Errors.DUPLICATE_START, 
                 "Start statment must exist once and in the first line");
+        ErrorMessages.put(Errors.LABEL_STARTING_WITH_ZERO, 
+                "Label can not start with '0'");
+        ErrorMessages.put(Errors.INVALID_ADDRESS_LOCATION, 
+                "Address location out of range (must be less than 0xFFFF)");        
         ErrorMessages.put(Errors.INVALID_BYTE_OPERAND, 
                 "Invalid byte operand");
         ErrorMessages.put(Errors.INVALID_HEX, 
@@ -119,7 +125,6 @@ public final class Constants {
         ErrorMessages.put(Errors.UNRECOGNIZED_MNEMONIC, 
                 "Unrecognized menmonic");
         ErrorMessages.put(Errors.WORD_OPERAND_OUT_OF_RANGE, 
-                "Word operand is out of range (max 2^24-1)");
-        
+                "Word operand is out of range (must be less than 2 ^ 23)");        
     }
 }

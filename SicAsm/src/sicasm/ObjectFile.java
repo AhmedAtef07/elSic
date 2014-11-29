@@ -9,7 +9,7 @@ import java.util.ArrayList;
 public final class ObjectFile {
     
     private final ArrayList<SourceLine> sourceLines;
-    private final Boolean canProcess;
+    private final Boolean errorsExist;
     private final int startAddress,
                       programLength;
     
@@ -17,15 +17,15 @@ public final class ObjectFile {
             throws IOException {
         ListFile listFile = new ListFile(sourceFile, generateListFile);
         sourceLines = listFile.getSourceLines();
-        canProcess = !listFile.getErrorsExist();
+        errorsExist = !listFile.getErrorsExist();
         startAddress = listFile.getStartAddress();
         programLength = listFile.getProgramLength();
         export();
     }
     
     private void export() throws FileNotFoundException {
-        if (!canProcess) {
-            System.out.println("SRCFILE is not a good file!");
+        if (!errorsExist) {
+            System.out.println("Source file contains errors!");
             PrintWriter pw = new PrintWriter(new File("OBJFILE"));
             pw.print("Check LISTFILE - SRCFILE contains errors.");
             pw.flush();
@@ -81,5 +81,9 @@ public final class ObjectFile {
         pw.print(lines);
         pw.flush();
         pw.close();
+    }  
+
+    public Boolean isErrorsExist() {
+        return errorsExist;
     }
 }

@@ -10,7 +10,7 @@ public class SourceLine {
                    objectCode;
     private int addressLocation,
                 errors;
-    private Boolean isLineComment;
+    private boolean isLineComment;
     
     private static int labelMaxLength, 
                        mnemonicMaxLength, 
@@ -65,7 +65,7 @@ public class SourceLine {
         return objectCode;
     }  
 
-    public Boolean getIsLineComment() {
+    public boolean getIsLineComment() {
         return isLineComment;
     }
     
@@ -86,10 +86,10 @@ public class SourceLine {
         return errorMessages;
     }  
     
-    public Boolean lineContainsErrors() {
+    public boolean containsErrors() {
         return errors != 0;
     }
-
+    
     public static int getLabelMaxLength() {
         return labelMaxLength;
     }
