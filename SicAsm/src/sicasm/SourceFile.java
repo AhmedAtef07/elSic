@@ -89,7 +89,7 @@ public class SourceFile {
                 operand = "";
             }
             SourceLine AXX = new SourceLine(label, mnemonic, operand, comment);
-            if (unclosedQuote)
+            if (unclosedQuote&&label.equalsIgnoreCase("byte"))
                 AXX.addError(Constants.Errors.UNCLOSED_QUOTE);
             file.add(AXX);
         }
