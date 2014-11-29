@@ -69,7 +69,8 @@ public final class Constants {
     }
     
     public enum Errors {
-        // Sorted in alphabetical order.           
+        // Sorted in alphabetical order. 
+        ARITHMETIC_OVERFLOW,
         DUPLICATE_LABEL,
         DUPLICATE_START,
         LABEL_STARTING_WITH_ZERO,
@@ -92,6 +93,8 @@ public final class Constants {
     public static final TreeMap<Errors, String> ErrorMessages = new TreeMap<>();
     
     static {
+        ErrorMessages.put(Errors.ARITHMETIC_OVERFLOW, 
+                "Location counter exceeded memory size (2^15)");       
         ErrorMessages.put(Errors.DUPLICATE_LABEL, 
                 "Duplicate or misplaced start statement");
         ErrorMessages.put(Errors.DUPLICATE_START, 
@@ -126,5 +129,15 @@ public final class Constants {
                 "Unrecognized menmonic");
         ErrorMessages.put(Errors.WORD_OPERAND_OUT_OF_RANGE, 
                 "Word operand is out of range (must be less than 2 ^ 23)");        
+    }
+    
+    public static final String getRandomSymbols() {
+         String symbols = "!@#$%^&*()";
+         Random rand = new Random();
+         String t = "";
+         for (int i = 0; i < 4; i++) {
+            t += symbols.charAt(rand.nextInt(symbols.length()));
+        }
+        return t;
     }
 }

@@ -61,6 +61,9 @@ public final class ListFile {
             firstUnCommentedLineFound = true;
             ++lineNumber;
             sourceLine.setAddressLocation(locationCounter);
+            if (locationCounter >= 0x8000) {
+                sourceLine.addError(Constants.Errors.ARITHMETIC_OVERFLOW);
+            }
             // Adding labels into symTable.
             if (!sourceLine.getLabel().isEmpty()) {
                 if (sourceLine.getLabel().charAt(0) == '0') {
@@ -69,7 +72,11 @@ public final class ListFile {
                 } else if (symTable.containsKey(sourceLine.getLabel())) {
                     sourceLine.addError(Constants.Errors.DUPLICATE_LABEL);
                 } else {
-                    symTable.put(sourceLine.getLabel(), locationCounter);                    
+                    if (locationCounter >= 0x8000) {
+                        symTable.put(sourceLine.getLabel(), 0xFFFF);
+                    } else {
+                        symTable.put(sourceLine.getLabel(), locationCounter);                        
+                    }
                 }
             }
             String menomonic = sourceLine.getMnemonic().toUpperCase();
@@ -285,6 +292,15 @@ public final class ListFile {
                 lines += "            " + sourceLine.getComment() + "\n";
                 continue;
             }
+            
+            String locationAddress;
+            if (sourceLine.getAddressLocation() < 0x8000) {
+                locationAddress = String.format("%04X",
+                        sourceLine.getAddressLocation());
+            } else {
+                locationAddress = Constants.getRandomSymbols();
+            }
+            
             int it = 0;
             ArrayList<Constants.Errors> errorsList = sourceLine.getErrorsList();
             String objectCode = sourceLine.getObjectCode();
@@ -298,10 +314,10 @@ public final class ListFile {
             }
             
             lines += String.format(
-                    "%04X %-6s %-" + SourceLine.getLabelMaxLength() + "s  %-" + 
+                    "%s %-6s %-" + SourceLine.getLabelMaxLength() + "s  %-" + 
                     SourceLine.getMnemonicMaxLength()+ "s  %-" + 
                     SourceLine.getOperandMaxLength()+ "s   %s\n",
-                    sourceLine.getAddressLocation(),    
+                    locationAddress,    
                     subObjectCode,
                     sourceLine.getLabel(), 
                     sourceLine.getMnemonic(), 
