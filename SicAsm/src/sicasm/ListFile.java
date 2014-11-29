@@ -118,14 +118,27 @@ public final class ListFile {
                         // Error number of digits must be even.
                     }
                 }
-            } else if (menomonic.equals("RESW")) {
-                // Check if it fits in memory size.
-                // Check if it is a valid positive integer.
-                locationCounter += Integer.parseInt(
-                        sourceLine.getOperand()) * 3;
-            } else if (menomonic.equals("RESB")) {
-                // Check if it fits in memory size.
-                locationCounter += Integer.parseInt(sourceLine.getOperand());
+            } else if (menomonic.equals("RESW") || menomonic.equals("RESB")) {
+                int mutli = 0;
+                if (menomonic.equals("RESW")) mutli = 3;
+                else  mutli = 1;
+                if (isValidReserveOperand(sourceLine.getOperand())) {
+                    if (isInRange(sourceLine.getOperand(), 10, 0x8000)) {
+                        int toBeReserved = Integer.parseInt(
+                                sourceLine.getOperand()) * mutli;
+                         if (toBeReserved + locationCounter < 0x8000) {
+                             locationCounter += toBeReserved;
+                         } else {
+                             sourceLine.addError(
+                                     Constants.Errors.INVALID_RESERVE_OPERAND);
+                         }
+                    } else {
+                        sourceLine.addError(
+                                Constants.Errors.INVALID_RESERVE_OPERAND);
+                    }               
+                } else {
+                    sourceLine.addError(Constants.Errors.INVALID_OPERAND);
+                }
             } else {
                 sourceLine.addError(Constants.Errors.UNRECOGNIZED_MNEMONIC);
             }
@@ -250,7 +263,16 @@ public final class ListFile {
         programLength = locationCounter - startAddress;
     }
     
-    private Boolean isValidByteOperand(String operand) {
+    private boolean isValidReserveOperand(String s) {
+        for (int i = 0; i < s.length(); i++) {
+            if (!(s.charAt(i) >= '0' && s.charAt(i) <= '9')) {
+                return false;
+            }
+        }
+        return true;
+    }
+    
+    private boolean isValidByteOperand(String operand) {
         if (!(operand.startsWith("c'") || operand.startsWith("x'") ||
               operand.startsWith("C'") || operand.startsWith("X'"))) {
             return false;

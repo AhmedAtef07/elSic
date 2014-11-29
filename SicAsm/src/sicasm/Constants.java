@@ -79,6 +79,7 @@ public final class Constants {
         INVALID_HEX,
         INVALID_HEX_REPRESENTATION,
         INVALID_OPERAND,
+        INVALID_RESERVE_OPERAND,
         INVALID_START_ADDRESS,
         INVALID_WORD_OPERAND,
         MISSING_MNEMONIC, 
@@ -111,6 +112,9 @@ public final class Constants {
                 "Number of hex digits must be even");
         ErrorMessages.put(Errors.INVALID_OPERAND, 
                 "Invalid operand");
+        ErrorMessages.put(Errors.INVALID_RESERVE_OPERAND, 
+                ("Invalid reserve operand " + 
+                 "(operand must not lead to arthimatic overflow)"));        
         ErrorMessages.put(Errors.INVALID_START_ADDRESS, 
                 "Start address must be a hexadecimal number");
         ErrorMessages.put(Errors.INVALID_WORD_OPERAND, 
