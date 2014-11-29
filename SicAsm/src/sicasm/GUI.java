@@ -21,7 +21,6 @@ import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.util.Scanner;
 import javax.swing.Box;
-import javax.swing.ImageIcon;
 
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
@@ -56,15 +55,13 @@ public class GUI extends JFrame {
 	GUI()
 	{
 		super("Assember Application");
-		setSize(900,900);
+		setSize(700,700);
                 scroll = new JScrollPane(input);
                 scroll.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
 		setResizable(true);
 		setDefaultCloseOperation(EXIT_ON_CLOSE);
-                setLayout(new BorderLayout());
-                setContentPane(new JLabel(new ImageIcon("Boston-City.jpg")));
-                //p.setLayout(new FlowLayout());
-                setLayout (new FlowLayout());
+                p.setLayout(new FlowLayout());
+                //setLayout (new FlowLayout());
                 p.setSize(200,200);
 		input.setEditable(true);
 		input.setLineWrap(true);
@@ -119,7 +116,7 @@ public class GUI extends JFrame {
 		//p.add(input);
 		p.add(scroll);
                // p.add( Box.createVerticalStrut(400) );
-		west.setLayout(new GridLayout(6,1));
+		west.setLayout(new GridLayout(10,1));
 		west.add(Clear);
 		west.add(Save);
 		west.add(Load);
