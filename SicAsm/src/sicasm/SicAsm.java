@@ -32,7 +32,7 @@ public class SicAsm extends JPanel {
 
     public void assembleSourceFile() {
         try {
-            File file = new File(System.getProperty("user.dir") + "\\SRCFILE");
+            File file = new File(System.getProperty("user.dir"), "SRCFILE");
             System.out.println(file.getPath());
             if (file.exists()) {
                 assemble(file.getPath(), true);
