@@ -11,9 +11,9 @@ public class SicAsm extends JPanel {
     private JFileChooser fc;
 
     public static void main(String[] args) throws IOException {
-        // new SicAsm().openFileDialog();
+        new SicAsm().openFileDialog();
         // new SicAsm().assembleSourceFile();
-        new SicAsm().runGUI();
+        // new SicAsm().runGUI();
         
     }
     
