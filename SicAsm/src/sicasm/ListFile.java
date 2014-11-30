@@ -312,12 +312,13 @@ public final class ListFile {
         String lines = "ElSic Assembler 1.0\n";
         DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
         lines += "Generated: " + dateFormat.format(new Date()) + "\n\n";
-        
+        boolean endFound = false;
         for (SourceLine sourceLine : sourceLines) {
             if (sourceLine.getIsLineComment()) {
                 lines += "            " + sourceLine.getComment() + "\n";
                 continue;
             }
+            if(endFound) continue;
             
             String locationAddress;
             if (sourceLine.getAddressLocation() < 0x8000) {
@@ -363,7 +364,7 @@ public final class ListFile {
                 }
             }
             if (sourceLine.getMnemonic().toUpperCase().equals("END")) {
-                break;
+                endFound = true;
             }
         }
         PrintWriter pw = new PrintWriter(new File(fileDir + "\\LISTFILE"));
