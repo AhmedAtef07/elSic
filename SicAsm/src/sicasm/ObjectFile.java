@@ -29,7 +29,7 @@ public final class ObjectFile {
         if (errorsExist) {
             System.out.println("Source file contains errors!");
             PrintWriter pw = new PrintWriter(new File(fileDir + "\\OBJFILE"));
-            pw.print("LISTFILE generated with errors.");
+            pw.print("LISTFILE was generated with errors.");
             pw.flush();
             pw.close();
             return;
@@ -37,10 +37,8 @@ public final class ObjectFile {
         String lines = "";
         String record = "";
         int locationCounter = startAddress;
-        int lineNumber = -1; 
         for(SourceLine sourceLine : sourceLines) {
-            ++lineNumber;
-            if (sourceLine.getIsLineComment()) {
+            if (sourceLine.isLineComment()) {
                 continue;
             }            
             if (sourceLine.getMnemonic().equalsIgnoreCase("START")) {
@@ -54,7 +52,7 @@ public final class ObjectFile {
             }             
             if (sourceLine.getMnemonic().equalsIgnoreCase("RESW") || 
                 sourceLine.getMnemonic().equalsIgnoreCase("RESB") ||
-                lineNumber == sourceLines.size() - 1) {                
+                sourceLine.getMnemonic().equalsIgnoreCase("END")) {                
                 int it = 0;
                 while(it < record.length()) {
                     int recoredLength = Math.min(60, record.length() - it);
@@ -73,10 +71,10 @@ public final class ObjectFile {
                             Integer.parseInt(sourceLine.getOperand());
                 } else {
                     break;
-                }                
-                continue;
+                }              
+            } else {
+                record += sourceLine.getObjectCode();
             }
-            record += sourceLine.getObjectCode();
         }
         lines += String.format("E%06X\n", startAddress);
         PrintWriter pw = new PrintWriter(new File(fileDir + "\\OBJFILE"));

@@ -53,11 +53,16 @@ public final class ListFile {
     private void passOne() {
         int lineNumber = -1,
             firstCodeLine = -1;
-        boolean startExist = false,
-                firstUnCommentedLineFound = false;
+        boolean startFound = false,
+                firstUnCommentedLineFound = false, 
+                endFound = false;
         for (SourceLine sourceLine : sourceLines) {
             if (!firstUnCommentedLineFound) ++firstCodeLine;
-            if (sourceLine.getIsLineComment()) {
+            if (sourceLine.isLineComment()) {
+                continue;
+            }
+            if (endFound) {
+                sourceLine.convertToLineComment();
                 continue;
             }
             firstUnCommentedLineFound = true;
@@ -90,7 +95,7 @@ public final class ListFile {
                     // Error misplaces start.
                     sourceLine.addError(Constants.Errors.DUPLICATE_START);
                 }
-                startExist = true;
+                startFound = true;
                 String operand = sourceLine.getOperand();
                 if (isHexInteger(operand)) {
                     if(isInRange(operand, 16, 0x8000)) {
@@ -105,7 +110,7 @@ public final class ListFile {
                     sourceLine.addError(Constants.Errors.INVALID_START_ADDRESS);
                 }                 
             } else if (menomonic.equals("END")) {
-                break;
+                endFound = true;
             } else if (menomonic.equals("WORD")) {
                 locationCounter += 3;
             } else if (menomonic.equals("BYTE")) {
@@ -147,15 +152,23 @@ public final class ListFile {
                 sourceLine.addError(Constants.Errors.UNRECOGNIZED_MNEMONIC);
             }
         }
-        if (!startExist) {
+        if (!startFound) {
              sourceLines.get(firstCodeLine).addError(
                      Constants.Errors.MISSING_START);
+        }
+        if (!endFound) {
+            // Must add random oprand name, to avoid the case of missing program
+            // name.
+            SourceLine endLine = new SourceLine("", "END", "SicProg",
+                     "Automatically added by elSic.");            
+             sourceLines.add(endLine);
+             endLine.setAddressLocation(locationCounter);
         }
     }
     
     private void passTwo() {
         for (SourceLine sourceLine : sourceLines) {
-            if (sourceLine.getIsLineComment()) {
+            if (sourceLine.isLineComment()) {
                 continue;
             }
             
@@ -314,7 +327,7 @@ public final class ListFile {
         lines += "Generated: " + dateFormat.format(new Date()) + "\n\n";
         boolean endFound = false;
         for (SourceLine sourceLine : sourceLines) {
-            if (sourceLine.getIsLineComment()) {
+            if (sourceLine.isLineComment()) {
                 lines += "            " + sourceLine.getComment() + "\n";
                 continue;
             }
@@ -341,9 +354,11 @@ public final class ListFile {
             }
             
             lines += String.format(
-                    "%s %-6s %-" + SourceLine.getLabelMaxLength() + "s  %-" + 
-                    SourceLine.getMnemonicMaxLength()+ "s  %-" + 
-                    SourceLine.getOperandMaxLength()+ "s   %s\n",
+                    ("%s %-6s " + 
+                     "%-" + SourceLine.getLabelMaxLength() + "s  " + 
+                     "%-" + SourceLine.getMnemonicMaxLength() + "s  " + 
+                     "%-" + SourceLine.getOperandMaxLength() + "s   " + 
+                     "%s\n"),
                     locationAddress,    
                     subObjectCode,
                     sourceLine.getLabel(), 

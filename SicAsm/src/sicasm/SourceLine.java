@@ -65,8 +65,21 @@ public class SourceLine {
         return objectCode;
     }  
 
-    public boolean getIsLineComment() {
+    public boolean isLineComment() {
         return isLineComment;
+    }
+    
+    public void convertToLineComment() {
+        isLineComment = true;
+        comment = String.format(
+                (".%-" + (labelMaxLength - 1) + "s  " + 
+                 "%-" + mnemonicMaxLength + "s  " + 
+                 "%-" + operandMaxLength + "s   " + 
+                 "%s"),
+                label, 
+                mnemonic,
+                operand,
+                comment);
     }
     
     public void addError(Constants.Errors error) {
@@ -102,7 +115,13 @@ public class SourceLine {
         return operandMaxLength;
     }    
     
+    /**
+     * Max length variables are static and needed to be reset whenever a new 
+     * SourceFile instance is made.
+     */
     public static void resetMaxLength() {
-        labelMaxLength = mnemonicMaxLength = operandMaxLength = 0;
+        labelMaxLength = 0;
+        mnemonicMaxLength = 0;
+        operandMaxLength = 0;
     }
 }
