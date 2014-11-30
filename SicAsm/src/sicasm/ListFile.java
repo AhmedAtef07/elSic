@@ -133,10 +133,12 @@ public final class ListFile {
                          } else {
                              sourceLine.addError(
                                      Constants.Errors.INVALID_RESERVE_OPERAND);
+                             locationCounter = 0xFFFF;
                          }
                     } else {
                         sourceLine.addError(
                                 Constants.Errors.INVALID_RESERVE_OPERAND);
+                        locationCounter = 0xFFFF;
                     }               
                 } else {
                     sourceLine.addError(Constants.Errors.INVALID_OPERAND);

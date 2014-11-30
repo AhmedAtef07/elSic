@@ -114,7 +114,7 @@ public final class Constants {
                 "Invalid operand");
         ErrorMessages.put(Errors.INVALID_RESERVE_OPERAND, 
                 ("Invalid reserve operand " + 
-                 "(operand must not lead to arthimatic overflow)"));        
+                 "(operand lead to arthimatic overflow)"));        
         ErrorMessages.put(Errors.INVALID_START_ADDRESS, 
                 "Start address must be a hexadecimal number");
         ErrorMessages.put(Errors.INVALID_WORD_OPERAND, 

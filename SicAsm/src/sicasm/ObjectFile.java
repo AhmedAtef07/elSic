@@ -30,7 +30,7 @@ public final class ObjectFile {
             System.out.println("Source file contains errors!");
             PrintWriter pw = new PrintWriter(new File(fileDir + "\\OBJFILE"));
             // new File(null)
-            pw.print("Check LISTFILE - SRCFILE contains errors.");
+            pw.print("Check LISTFILE.\nSource file contains errors.");
             pw.flush();
             pw.close();
             return;
@@ -80,7 +80,7 @@ public final class ObjectFile {
             record += sourceLine.getObjectCode();
         }
         lines += String.format("E%06X\n", startAddress);
-        PrintWriter pw = new PrintWriter(new File("OBJFILE"));
+        PrintWriter pw = new PrintWriter(new File(fileDir + "\\OBJFILE"));
         pw.print(lines);
         pw.flush();
         pw.close();
