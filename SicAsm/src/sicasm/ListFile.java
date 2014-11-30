@@ -382,7 +382,7 @@ public final class ListFile {
                 endFound = true;
             }
         }
-        PrintWriter pw = new PrintWriter(new File(fileDir + "\\LISTFILE"));
+        PrintWriter pw = new PrintWriter(new File(fileDir, "LISTFILE"));
         pw.print(lines);
         pw.flush();
         pw.close();

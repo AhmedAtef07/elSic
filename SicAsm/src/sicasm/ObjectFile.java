@@ -28,7 +28,7 @@ public final class ObjectFile {
     private void export() throws FileNotFoundException {
         if (errorsExist) {
             System.out.println("Source file contains errors!");
-            PrintWriter pw = new PrintWriter(new File(fileDir + "\\OBJFILE"));
+            PrintWriter pw = new PrintWriter(new File(fileDir, "OBJFILE"));
             pw.print("LISTFILE was generated with errors.");
             pw.flush();
             pw.close();
@@ -77,7 +77,7 @@ public final class ObjectFile {
             }
         }
         lines += String.format("E%06X\n", startAddress);
-        PrintWriter pw = new PrintWriter(new File(fileDir + "\\OBJFILE"));
+        PrintWriter pw = new PrintWriter(new File(fileDir, "OBJFILE"));
         pw.print(lines);
         pw.flush();
         pw.close();

@@ -72,7 +72,7 @@ public class SourceLine {
     public void convertToLineComment() {
         isLineComment = true;
         comment = String.format(
-                (".%-" + (labelMaxLength - 1) + "s  " + 
+                (".%-" + labelMaxLength + "s " + 
                  "%-" + mnemonicMaxLength + "s  " + 
                  "%-" + operandMaxLength + "s   " + 
                  "%s"),
