@@ -1,5 +1,6 @@
 package sicasm;
 
+import java.io.File;
 import java.io.IOException;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
@@ -9,23 +10,63 @@ public class SicAsm extends JPanel {
 
     private JFileChooser fc;
 
-    public SicAsm() {
+    public static void main(String[] args) throws IOException {
+        // new SicAsm().openFileDialog();
+        new SicAsm().assembleSourceFile();
+    }
+    
+    public void openFileDialog() {
         try {
             fc = new JFileChooser();
             if (fc.showOpenDialog(SicAsm.this) == JFileChooser.APPROVE_OPTION) {
-                assemble(fc.getSelectedFile().getPath());
-                JOptionPane.showMessageDialog(null, "File successfully assembled.", "elSic response", WIDTH);
+                assemble(fc.getSelectedFile().getPath(), true);                
+            }
+        } catch (Exception e) { 
+            JOptionPane.showMessageDialog(null, "Failed to assemble the file." +
+                    "\n" + e.getMessage(),
+                    "elSic response", JOptionPane.ERROR_MESSAGE);
+        }   
+    }
+
+    public void assembleSourceFile() {
+        try {
+            File file = new File(System.getProperty("user.dir") + "\\SRCFILE");
+            System.out.println(file.getPath());
+            if (file.exists()) {
+                assemble(file.getPath(), true);
+            }
+            else {
+                JOptionPane.showMessageDialog(null, "Couldn't find 'SRCFILE'!",
+                    "elSic response", JOptionPane.ERROR_MESSAGE);
             }
         } catch (Exception e) {
-            JOptionPane.showMessageDialog(null, "Failed to assemble the file.", "elSic response", WIDTH);
+            JOptionPane.showMessageDialog(null, "Failed to assemble the file." +
+                    "\n" + e.getMessage(),
+                    "elSic response", JOptionPane.ERROR_MESSAGE);
         }
     }
-
-    public static void main(String[] args) throws IOException {
-        SicAsm run = new SicAsm();
+    
+    
+    static void assemble(String fileName, boolean showMessageResults) 
+            throws IOException {
+        boolean errorsExist = new ObjectFile(fileName, true).isErrorsExist();
+        if (showMessageResults) {
+            showMessageResults(errorsExist);
+        }        
     }
-
-    static void assemble(String fileName) throws IOException {
-        new ObjectFile(fileName, true);
+    
+    static void showMessageResults(boolean errorsExist)  {
+        if (errorsExist) {
+            JOptionPane.showMessageDialog(null,
+                    ("File successfully assembled.\n" +
+                     "LISTFILE generated with errors."), 
+                    "elSic response", JOptionPane.INFORMATION_MESSAGE);            
+        } else {
+           JOptionPane.showMessageDialog(null,
+                    ("File successfully assembled.\n" +
+                     "LISTFILE generated successfully.\n" +
+                     "OBJFILE generated successfully."), 
+                    "elSic response", JOptionPane.INFORMATION_MESSAGE);             
+        }   
     }
 }

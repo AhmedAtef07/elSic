@@ -19,18 +19,17 @@ public final class ObjectFile {
         ListFile listFile = new ListFile(sourceFile, generateListFile);
         fileDir = new File(sourceFile).getParent();
         sourceLines = listFile.getSourceLines();
-        errorsExist = !listFile.getErrorsExist();
+        errorsExist = listFile.getErrorsExist();
         startAddress = listFile.getStartAddress();
         programLength = listFile.getProgramLength();
         export();
     }
     
     private void export() throws FileNotFoundException {
-        if (!errorsExist) {
+        if (errorsExist) {
             System.out.println("Source file contains errors!");
             PrintWriter pw = new PrintWriter(new File(fileDir + "\\OBJFILE"));
-            // new File(null)
-            pw.print("Check LISTFILE.\nSource file contains errors.");
+            pw.print("LISTFILE generated with errors.");
             pw.flush();
             pw.close();
             return;
