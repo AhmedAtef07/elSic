@@ -12,7 +12,9 @@ public class SicAsm extends JPanel {
 
     public static void main(String[] args) throws IOException {
         // new SicAsm().openFileDialog();
-        new SicAsm().assembleSourceFile();
+        // new SicAsm().assembleSourceFile();
+        new SicAsm().runGUI();
+        
     }
     
     public void openFileDialog() {
@@ -46,6 +48,13 @@ public class SicAsm extends JPanel {
         }
     }
     
+    public void runGUI() {
+        javax.swing.SwingUtilities.invokeLater(new Runnable() {
+            public void run() {
+                new GUI();
+            }
+        });     
+    }
     
     static void assemble(String fileName, boolean showMessageResults) 
             throws IOException {
