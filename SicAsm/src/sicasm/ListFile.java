@@ -76,9 +76,9 @@ public final class ListFile {
             }
             // Adding labels into symTable.
             if (!sourceLine.getLabel().isEmpty()) {
-                if (sourceLine.getLabel().charAt(0) == '0') {
+                if (!isValidLabelRepresentation(sourceLine.getLabel())) {
                     sourceLine.addError(
-                            Constants.Errors.LABEL_STARTING_WITH_ZERO);
+                            Constants.Errors.INVALID_LABEL_REPRESENTATION);
                 } else if (symTable.containsKey(sourceLine.getLabel())) {
                     sourceLine.addError(Constants.Errors.DUPLICATE_LABEL);
                 } else {
@@ -198,19 +198,7 @@ public final class ListFile {
                         operand = operand.substring(0, operand.length() - 2);
                     }
                     int operandNum;
-                    if (operand.charAt(0) == '0') {
-                        if (!isHexInteger(operand)) {
-                             sourceLine.addError(
-                                    Constants.Errors.INVALID_HEX);
-                             continue;
-                        } 
-                        if (!isInRange(operand, 16, 0xFFFF)) {                         
-                             sourceLine.addError(
-                                    Constants.Errors.INVALID_ADDRESS_LOCATION);
-                             continue;
-                        }  
-                        operandNum = Integer.parseInt(operand, 16);
-                    } else if (symTable.containsKey(operand)) {
+                    if (symTable.containsKey(operand)) {
                         operandNum = symTable.get(operand);
                     } else {
                         // Undefined label. 
@@ -281,6 +269,22 @@ public final class ListFile {
             errorsExist |= sourceLine.containsErrors();
         }
         programLength = locationCounter - startAddress;
+    }
+
+    private boolean isValidLabelRepresentation(String label) {
+        label = label.toUpperCase();
+        if(!((label.charAt(0) >= 'A' && label.charAt(0) <= 'Z') || 
+             label.charAt(0) == '_')) {
+            return false;
+        }
+        for(int i = 1; i < label.length(); ++i) {
+            if(!((label.charAt(i) >= 'A' && label.charAt(i) <= 'Z') || 
+                 (label.charAt(i) >= '0' && label.charAt(i) <= '9') || 
+                  label.charAt(0) == '_')) {
+                return false;
+            }
+        }
+        return true;
     }
     
     private boolean isValidReserveOperand(String s) {

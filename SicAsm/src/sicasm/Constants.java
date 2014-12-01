@@ -73,11 +73,11 @@ public final class Constants {
         ARITHMETIC_OVERFLOW,
         DUPLICATE_LABEL,
         DUPLICATE_START,
-        LABEL_STARTING_WITH_ZERO,
         INVALID_ADDRESS_LOCATION,
         INVALID_BYTE_OPERAND,
         INVALID_HEX,
         INVALID_HEX_REPRESENTATION,
+        INVALID_LABEL_REPRESENTATION,
         INVALID_OPERAND,
         INVALID_RESERVE_OPERAND,
         INVALID_START_ADDRESS,
@@ -100,8 +100,6 @@ public final class Constants {
                 "Duplicate or misplaced start statement");
         ErrorMessages.put(Errors.DUPLICATE_START, 
                 "Start statment must exist once and in the first line");
-        ErrorMessages.put(Errors.LABEL_STARTING_WITH_ZERO, 
-                "Label can not start with '0'");
         ErrorMessages.put(Errors.INVALID_ADDRESS_LOCATION, 
                 "Address location out of range (must be less than 0xFFFF)");        
         ErrorMessages.put(Errors.INVALID_BYTE_OPERAND, 
@@ -110,6 +108,9 @@ public final class Constants {
                 "Expected valid hexadecimal number in operand");
         ErrorMessages.put(Errors.INVALID_HEX_REPRESENTATION,
                 "Number of hex digits must be even");
+        ErrorMessages.put(Errors.INVALID_LABEL_REPRESENTATION,
+                ("Invalid label represenation (must only contain " + 
+                 "[A-Z][a-z][0-9][_] except first char without [0_9]"));        
         ErrorMessages.put(Errors.INVALID_OPERAND, 
                 "Invalid operand");
         ErrorMessages.put(Errors.INVALID_RESERVE_OPERAND, 
