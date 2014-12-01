@@ -21,10 +21,13 @@ public final class ListFile {
     private String fileDir;
             
     public ListFile(String sourceFileName, Boolean gerenateListFile) 
-            throws IOException {
+            throws IOException, Exception {
         SourceLine.resetMaxLength();
         SourceFile sourceFile = new SourceFile(sourceFileName);
         fileDir = new File(sourceFileName).getParent();
+        if (sourceLines == null) {
+            throw new Exception("File is empty!");
+        }
         sourceLines = sourceFile.getTokenz();
         symTable = new TreeMap<>();
         errorsExist = false;
@@ -50,7 +53,7 @@ public final class ListFile {
         return true;
     }    
     
-    private void passOne() {
+    private void passOne() throws Exception {
         int lineNumber = -1,
             firstCodeLine = -1;
         boolean startFound = false,
@@ -151,6 +154,9 @@ public final class ListFile {
             } else {
                 sourceLine.addError(Constants.Errors.UNRECOGNIZED_MNEMONIC);
             }
+        }
+        if (firstUnCommentedLineFound) {
+            throw new Exception("No SIC commands found!");
         }
         if (!startFound) {
              sourceLines.get(firstCodeLine).addError(
