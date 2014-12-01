@@ -15,7 +15,7 @@ public final class ObjectFile {
     private final String fileDir;
     
     public ObjectFile(String sourceFile, Boolean generateListFile) 
-            throws IOException {
+            throws Exception {
         ListFile listFile = new ListFile(sourceFile, generateListFile);
         fileDir = new File(sourceFile).getParent();
         sourceLines = listFile.getSourceLines();

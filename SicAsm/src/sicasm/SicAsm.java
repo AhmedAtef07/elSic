@@ -10,8 +10,9 @@ public class SicAsm extends JPanel {
 
     private JFileChooser fc;
 
-    public static void main(String[] args) throws IOException {
-        new SicAsm().openFileDialog();
+    public static void main(String[] args) throws Exception {
+        assemble("C:\\Users\\Ahmed\\Documents\\magdy tawy3", true);
+        // new SicAsm().openFileDialog();
         // new SicAsm().assembleSourceFile();
         // new SicAsm().runGUI();
         
@@ -21,7 +22,7 @@ public class SicAsm extends JPanel {
         try {
             fc = new JFileChooser();
             if (fc.showOpenDialog(SicAsm.this) == JFileChooser.APPROVE_OPTION) {
-                assemble(fc.getSelectedFile().getPath(), true);                
+                assemble(fc.getSelectedFile().getPath(), true);  
             }
         } catch (Exception e) { 
             JOptionPane.showMessageDialog(null, "Failed to assemble the file." +
@@ -56,9 +57,9 @@ public class SicAsm extends JPanel {
         });     
     }
     
-    static void assemble(String fileName, boolean showMessageResults) 
-            throws IOException {
-        boolean errorsExist = new ObjectFile(fileName, true).isErrorsExist();
+    static void assemble(String filePath, boolean showMessageResults) 
+            throws Exception {
+        boolean errorsExist = new ObjectFile(filePath, true).isErrorsExist();
         if (showMessageResults) {
             showMessageResults(errorsExist);
         }        

@@ -25,10 +25,10 @@ public final class ListFile {
         SourceLine.resetMaxLength();
         SourceFile sourceFile = new SourceFile(sourceFileName);
         fileDir = new File(sourceFileName).getParent();
-        if (sourceLines == null) {
+        sourceLines = sourceFile.getTokenz();
+        if (sourceLines.isEmpty()) {
             throw new Exception("File is empty!");
         }
-        sourceLines = sourceFile.getTokenz();
         symTable = new TreeMap<>();
         errorsExist = false;
         passOne();
@@ -155,7 +155,7 @@ public final class ListFile {
                 sourceLine.addError(Constants.Errors.UNRECOGNIZED_MNEMONIC);
             }
         }
-        if (firstUnCommentedLineFound) {
+        if (!firstUnCommentedLineFound) {
             throw new Exception("No SIC commands found!");
         }
         if (!startFound) {
@@ -225,9 +225,6 @@ public final class ListFile {
             } else if (menomonic.equals("START")) {
                 // Error was already set in pass one in case of duplicates.
             } else if (menomonic.equals("END")) {
-                // Terminate proccessing. 
-                sourceLine.setObjectCode(objectCode);
-                break;
             } else if (menomonic.equals("WORD")) {
                 if (isValidWordOperand(operand) == 7) {
                     String hexCode = String.format("%06X", Integer.parseInt(
