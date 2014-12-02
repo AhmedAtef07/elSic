@@ -197,18 +197,16 @@ public final class ListFile {
                         indexed = true;
                         operand = operand.substring(0, operand.length() - 2);
                     }
-                    int operandNum;
                     if (symTable.containsKey(operand)) {
-                        operandNum = symTable.get(operand);
+                        int operandNum = symTable.get(operand);
+                        if (indexed) operandNum |= 1 << 15; 
+                        hexCode |= operandNum;                        
+                        objectCode = String.format("%06X", hexCode);
                     } else {
                         // Undefined label. 
                         // TODO(ahmedatef): Show which label is not defined.
-                        sourceLine.addError(Constants.Errors.UNDEFINED_LABEL);                                                
-                        continue;
-                    }          
-                    if (indexed) operandNum |= 1 << 15; 
-                    hexCode |= operandNum;                        
-                    objectCode = String.format("%06X", hexCode);
+                        sourceLine.addError(Constants.Errors.UNDEFINED_LABEL);                          
+                    }                        
                 }                
             } else if (menomonic.equals("START")) {
                 // Error was already set in pass one in case of duplicates.
