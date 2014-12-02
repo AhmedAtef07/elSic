@@ -97,7 +97,7 @@ public final class Constants {
         ErrorMessages.put(Errors.ARITHMETIC_OVERFLOW, 
                 "Location counter exceeded memory size (2^15)");       
         ErrorMessages.put(Errors.DUPLICATE_LABEL, 
-                "Duplicate or misplaced start statement");
+                "Dupliacted labels are not allowed");
         ErrorMessages.put(Errors.DUPLICATE_START, 
                 "Start statment must exist once and in the first line");
         ErrorMessages.put(Errors.INVALID_ADDRESS_LOCATION, 
@@ -129,7 +129,7 @@ public final class Constants {
         ErrorMessages.put(Errors.UNCLOSED_QUOTE, 
                 "Can not find closing quote for byte operand");
         ErrorMessages.put(Errors.UNDEFINED_LABEL, 
-                "Undefined symbol in operand");
+                "Undefined label in operand");
         ErrorMessages.put(Errors.UNRECOGNIZED_MNEMONIC, 
                 "Unrecognized menmonic");
         ErrorMessages.put(Errors.WORD_OPERAND_OUT_OF_RANGE, 
