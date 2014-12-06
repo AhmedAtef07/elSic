@@ -93,6 +93,8 @@ public final class ListFile {
             // Handeling Mnemonics and directives.
             if (Constants.OpTable.containsKey(menomonic)) {
                 locationCounter += 3;
+            } else if (sourceLine.getOperand().isEmpty()) {
+                sourceLine.addError(Constants.Errors.MISSING_OPERAND);
             } else if (menomonic.equals("START")) {
                 if (lineNumber != 0) {
                     // Error misplaces start.
@@ -208,6 +210,8 @@ public final class ListFile {
                         sourceLine.addError(Constants.Errors.UNDEFINED_LABEL);                          
                     }                        
                 }                
+            }  else if (sourceLine.getOperand().isEmpty()) {
+                sourceLine.addError(Constants.Errors.MISSING_OPERAND);
             } else if (menomonic.equals("START")) {
                 // Error was already set in pass one in case of duplicates.
             } else if (menomonic.equals("END")) {
