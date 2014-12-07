@@ -86,7 +86,8 @@ public final class Constants {
         MISSING_OPERAND,
         MISSING_START,
         UNCLOSED_QUOTE,
-        UNDEFINED_LABEL,  
+        UNDEFINED_LABEL, 
+        UNNAMED_PROGRAM,
         UNRECOGNIZED_MNEMONIC,
         WORD_OPERAND_OUT_OF_RANGE,
     }
@@ -110,7 +111,7 @@ public final class Constants {
                 "Number of hex digits must be even");
         ErrorMessages.put(Errors.INVALID_LABEL_REPRESENTATION,
                 ("Invalid label represenation (must only contain " + 
-                 "[A-Z][a-z][0-9][_] except first char without [0_9]"));        
+                 "[A-Za-z0-9_] except first char without [0-9]"));        
         ErrorMessages.put(Errors.INVALID_OPERAND, 
                 "Invalid operand");
         ErrorMessages.put(Errors.INVALID_RESERVE_OPERAND, 
@@ -130,6 +131,8 @@ public final class Constants {
                 "Can not find closing quote for byte operand");
         ErrorMessages.put(Errors.UNDEFINED_LABEL, 
                 "Undefined label in operand");
+        ErrorMessages.put(Errors.UNNAMED_PROGRAM, 
+                "Program must have a name (label must not be empty)");        
         ErrorMessages.put(Errors.UNRECOGNIZED_MNEMONIC, 
                 "Unrecognized menmonic");
         ErrorMessages.put(Errors.WORD_OPERAND_OUT_OF_RANGE, 

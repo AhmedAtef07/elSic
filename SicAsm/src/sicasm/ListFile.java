@@ -54,6 +54,7 @@ public final class ListFile {
     }    
     
     private void passOne() throws Exception {
+        String progName = "Prog";
         int lineNumber = -1,
             firstCodeLine = -1;
         boolean startFound = false,
@@ -89,18 +90,27 @@ public final class ListFile {
                     }
                 }
             }
-            String menomonic = sourceLine.getMnemonic().toUpperCase();
+
             // Handeling Mnemonics and directives.
-            if (Constants.OpTable.containsKey(menomonic)) {
+            String menomonic = sourceLine.getMnemonic().toUpperCase();
+            if (menomonic.isEmpty()) {
+                sourceLine.addError(Constants.Errors.MISSING_MNEMONIC);
+            } else if (Constants.OpTable.containsKey(menomonic)) {
+                // Menomonic 'RSUB' does not need operand. So this should be 
+                // checked before checking if there is an oprand or not.
                 locationCounter += 3;
             } else if (sourceLine.getOperand().isEmpty()) {
                 sourceLine.addError(Constants.Errors.MISSING_OPERAND);
             } else if (menomonic.equals("START")) {
                 if (lineNumber != 0) {
-                    // Error misplaces start.
                     sourceLine.addError(Constants.Errors.DUPLICATE_START);
                 }
                 startFound = true;
+                if (sourceLine.getLabel().isEmpty()) {
+                    sourceLine.addError(Constants.Errors.UNNAMED_PROGRAM);
+                } else {
+                    progName = sourceLine.getLabel();                    
+                }
                 String operand = sourceLine.getOperand();
                 if (isHexInteger(operand)) {
                     if(isInRange(operand, 16, 0x8000)) {
@@ -127,7 +137,7 @@ public final class ListFile {
                     if (hexLength % 2 == 0) {
                         locationCounter += hexLength / 2;
                     } else {
-                        // Error number of digits must be even.
+                        // Error number of digits must be even. Added in pass 2.
                     }
                 }
             } else if (menomonic.equals("RESW") || menomonic.equals("RESB")) {
@@ -167,7 +177,7 @@ public final class ListFile {
         if (!endFound) {
             // Must add random oprand name, to avoid the case of missing program
             // name.
-            SourceLine endLine = new SourceLine("", "END", "SicProg",
+            SourceLine endLine = new SourceLine("", "END", progName,
                      "Automatically added by elSic.");            
              sourceLines.add(endLine);
              endLine.setAddressLocation(locationCounter);
