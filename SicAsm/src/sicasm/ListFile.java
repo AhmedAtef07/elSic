@@ -216,8 +216,6 @@ public final class ListFile {
                         hexCode |= operandNum;                        
                         objectCode = String.format("%06X", hexCode);
                     } else {
-                        // Undefined label. 
-                        // TODO(ahmedatef): Show which label is not defined.
                         sourceLine.addError(Constants.Errors.UNDEFINED_LABEL);                          
                     }                        
                 }                

@@ -68,28 +68,46 @@ public final class Constants {
         OpTable.put("WD", 0xDC);
     }
     
+    public enum Target {
+        LINE, LABEL, MNEMONIC, OPERAND;
+    }
+    
     public enum Errors {
-        // Sorted in alphabetical order. 
-        ARITHMETIC_OVERFLOW,
-        DUPLICATE_LABEL,
-        DUPLICATE_START,
-        INVALID_ADDRESS_LOCATION,
-        INVALID_BYTE_OPERAND,
-        INVALID_HEX,
-        INVALID_HEX_REPRESENTATION,
-        INVALID_LABEL_REPRESENTATION,
-        INVALID_OPERAND,
-        INVALID_RESERVE_OPERAND,
-        INVALID_START_ADDRESS,
-        INVALID_WORD_OPERAND,
-        MISSING_MNEMONIC, 
-        MISSING_OPERAND,
-        MISSING_START,
-        UNCLOSED_QUOTE,
-        UNDEFINED_LABEL, 
-        UNNAMED_PROGRAM,
-        UNRECOGNIZED_MNEMONIC,
-        WORD_OPERAND_OUT_OF_RANGE,
+        // Will be printed in order of decleration.
+        UNNAMED_PROGRAM (Target.LINE),
+        DUPLICATE_START (Target.LINE),
+        MISSING_START (Target.LINE),
+        MISSING_MNEMONIC (Target.LINE) ,
+        MISSING_OPERAND (Target.LINE),
+        
+        
+        INVALID_LABEL_REPRESENTATION (Target.LABEL),
+        DUPLICATE_LABEL (Target.LABEL),
+        
+        UNRECOGNIZED_MNEMONIC (Target.MNEMONIC),
+        
+        ARITHMETIC_OVERFLOW (Target.OPERAND),
+        INVALID_ADDRESS_LOCATION (Target.OPERAND),
+        INVALID_BYTE_OPERAND (Target.OPERAND),
+        INVALID_HEX (Target.OPERAND),
+        INVALID_HEX_REPRESENTATION (Target.OPERAND),
+        INVALID_OPERAND (Target.OPERAND),
+        INVALID_RESERVE_OPERAND (Target.OPERAND),
+        INVALID_START_ADDRESS (Target.OPERAND),
+        INVALID_WORD_OPERAND (Target.OPERAND),
+        UNCLOSED_QUOTE (Target.OPERAND),
+        UNDEFINED_LABEL (Target.OPERAND) ,
+        WORD_OPERAND_OUT_OF_RANGE (Target.OPERAND);
+        
+        private Target target;
+        
+        private Errors(Target target) {
+            this.target = target;
+        }
+
+        public Target getTarget() {
+            return target;
+        }        
     }
     
     public static final TreeMap<Errors, String> ErrorMessages = new TreeMap<>();

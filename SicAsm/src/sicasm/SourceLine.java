@@ -95,7 +95,7 @@ public class SourceLine {
         ArrayList<Constants.Errors> errorMessages = new ArrayList<>();
         for (int i = 0; i < 30; i++) {
             if ((errors & (1 << i)) != 0) {
-                errorMessages.add(Constants.Errors.values()[i]);                        
+                errorMessages.add(Constants.Errors.values()[i]);  
             }
         }
         return errorMessages;
@@ -113,6 +113,19 @@ public class SourceLine {
         labelMaxLength = 0;
         mnemonicMaxLength = 0;
         operandMaxLength = 0;
+    }
+    
+    private String getErrorTarget(Constants.Target target) {
+        switch (target) {
+            case LABEL:
+                return "{\"" + label + "\"} ";
+            case MNEMONIC:
+                return "{\"" + mnemonic + "\"} ";
+            case OPERAND:
+                return "{\"" + operand + "\"} ";
+            default:
+                return "";
+        }
     }
     
     /**
@@ -170,6 +183,7 @@ public class SourceLine {
         if (errorsList != null) {
             for (int i = 0; i < errorsList.size(); ++i) {
                 line.append("  **** ");
+                line.append(getErrorTarget(errorsList.get(i).getTarget()));
                 line.append(Constants.ErrorMessages.get(errorsList.get(i)));
                 line.append(". ****\n");
             }
