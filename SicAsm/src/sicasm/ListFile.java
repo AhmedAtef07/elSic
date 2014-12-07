@@ -100,7 +100,7 @@ public final class ListFile {
                 // checked before checking if there is an oprand or not.
                 locationCounter += 3;
             } else if (sourceLine.getOperand().isEmpty()) {
-                sourceLine.addError(Constants.Errors.MISSING_OPERAND);
+                // Add error after more checks in pass two.
             } else if (menomonic.equals("START")) {
                 if (lineNumber != 0) {
                     sourceLine.addError(Constants.Errors.DUPLICATE_START);
@@ -194,7 +194,8 @@ public final class ListFile {
             String menomonic = sourceLine.getMnemonic().toUpperCase();
             String operand = sourceLine.getOperand();
             
-            if (operand.isEmpty() && !menomonic.equals("RSUB")) {
+            if (operand.isEmpty() && !menomonic.equals("RSUB") && 
+                    !menomonic.equals("END")) {
                 sourceLine.addError(Constants.Errors.MISSING_OPERAND);
             }
             // Handeling Mnemonics and directives.
@@ -221,7 +222,8 @@ public final class ListFile {
                     }                        
                 }                
             }  else if (sourceLine.getOperand().isEmpty()) {
-                sourceLine.addError(Constants.Errors.MISSING_OPERAND);
+                // Error would be already added. This just to make sure coming 
+                // conditions will be only satisfied in case there is an oprand.
             } else if (menomonic.equals("START")) {
                 // Error was already set in pass one in case of duplicates.
             } else if (menomonic.equals("END")) {
@@ -264,7 +266,6 @@ public final class ListFile {
                                         INVALID_HEX_REPRESENTATION);
                             }
                         } else {
-                            // Not valid Hex.
                             sourceLine.addError(Constants.Errors.INVALID_HEX);
                         }
                     }
@@ -325,8 +326,7 @@ public final class ListFile {
             if (!(operand.charAt(i) >= '0' && operand.charAt(i) <= '9')){
                 return 0;
             }
-        }
-        
+        }        
         if (!isInRange(operand, 10, 0x7FFFFF)) {
             return 1;
         }
