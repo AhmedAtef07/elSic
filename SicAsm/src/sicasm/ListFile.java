@@ -341,66 +341,16 @@ public final class ListFile {
     }
     
     private void export() throws FileNotFoundException {
-        String lines = "ElSic Assembler 1.0\n";
+        StringBuilder lines = new StringBuilder("ElSic Assembler 1.0\n");
         DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
-        lines += "Generated: " + dateFormat.format(new Date()) + "\n\n";
-        boolean endFound = false;
+        lines.append("Generated: ");
+        lines.append(dateFormat.format(new Date()));
+        lines.append("\n\n");
+        
         for (SourceLine sourceLine : sourceLines) {
-            if (sourceLine.isLineComment()) {
-                lines += "            " + sourceLine.getComment() + "\n";
-                continue;
-            }
-            if(endFound) continue;
-            
-            String locationAddress;
-            if (sourceLine.getAddressLocation() < 0x8000) {
-                locationAddress = String.format("%04X",
-                        sourceLine.getAddressLocation());
-            } else {
-                locationAddress = Constants.getRandomSymbols();
-            }
-            
-            int it = 0;
-            ArrayList<Constants.Errors> errorsList = sourceLine.getErrorsList();
-            String objectCode = sourceLine.getObjectCode();
-            String subObjectCode;
-            if (errorsList == null) {
-                subObjectCode = objectCode.substring(
-                        it, it = Math.min(it + 6, objectCode.length()));
-            } else {
-                subObjectCode = "";
-                objectCode = "";
-            }
-            
-            lines += String.format(
-                    ("%s %-6s " + 
-                     "%-" + SourceLine.getLabelMaxLength() + "s  " + 
-                     "%-" + SourceLine.getMnemonicMaxLength() + "s  " + 
-                     "%-" + SourceLine.getOperandMaxLength() + "s   " + 
-                     "%s\n"),
-                    locationAddress,    
-                    subObjectCode,
-                    sourceLine.getLabel(), 
-                    sourceLine.getMnemonic(), 
-                    sourceLine.getOperand(), 
-                    sourceLine.getComment()); 
-            
-            while(it < objectCode.length()) {
-                 subObjectCode = objectCode.substring(
-                         it, it = Math.min(it + 6, objectCode.length()));   
-                 lines += "     " + subObjectCode + "\n";
-            }
-            if (errorsList != null) {
-                for (int i = 0; i < errorsList.size(); ++i) {
-                    lines += "  **** " +
-                             Constants.ErrorMessages.get(errorsList.get(i)) +
-                             ". ****\n";
-                }
-            }
-            if (sourceLine.getMnemonic().toUpperCase().equals("END")) {
-                endFound = true;
-            }
+            lines.append(sourceLine.getListFileLine());
         }
+        
         PrintWriter pw = new PrintWriter(new File(fileDir, "LISTFILE"));
         pw.print(lines);
         pw.flush();

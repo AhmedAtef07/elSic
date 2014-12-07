@@ -71,6 +71,8 @@ public class SourceLine {
     
     public void convertToLineComment() {
         isLineComment = true;
+        // Note 'labelMaxLength' here is followed only by 1 space to compensate 
+        // the shifting made by the dot, and keep the columns aligned.
         comment = String.format(
                 (".%-" + labelMaxLength + "s " + 
                  "%-" + mnemonicMaxLength + "s  " + 
@@ -86,7 +88,7 @@ public class SourceLine {
         errors |= 1 << error.ordinal();
     }
     
-    public ArrayList<Constants.Errors> getErrorsList() {
+    private ArrayList<Constants.Errors> getErrorsList() {
         if (errors == 0) {
             return null;
         }
@@ -103,18 +105,6 @@ public class SourceLine {
         return errors != 0;
     }
     
-    public static int getLabelMaxLength() {
-        return labelMaxLength;
-    }
-
-    public static int getMnemonicMaxLength() {
-        return mnemonicMaxLength;
-    }
-
-    public static int getOperandMaxLength() {
-        return operandMaxLength;
-    }    
-    
     /**
      * Max length variables are static and needed to be reset whenever a new 
      * SourceFile instance is made.
@@ -123,5 +113,67 @@ public class SourceLine {
         labelMaxLength = 0;
         mnemonicMaxLength = 0;
         operandMaxLength = 0;
+    }
+    
+    /**
+     * 
+     * @return StringBuilder of one or more lines.
+     * Object code will be divided 6 hex digits per line.
+     * Errors will be concatenated at the end of the StringBuilder, each on a 
+     * separate line.
+     */
+    public StringBuilder getListFileLine() {
+        if (isLineComment()) {
+            return new StringBuilder("            " + comment + "\n");
+        }
+     
+        String locationAddress;
+        if (addressLocation < 0x8000) {
+            locationAddress = String.format("%04X", addressLocation);
+        } else {
+            locationAddress = Constants.getRandomSymbols();
+        }
+
+        int it = 0;
+        ArrayList<Constants.Errors> errorsList = getErrorsList();
+        String subObjectCode;
+        if (errorsList == null) {
+            subObjectCode = objectCode.substring(
+                    it, it = Math.min(it + 6, objectCode.length()));
+        } else {
+            subObjectCode = "";
+            objectCode = "";
+        }
+        
+        StringBuilder line = new StringBuilder("");
+        
+        line.append(String.format((
+                "%s %-6s " +                 
+                "%-" + labelMaxLength + "s  " + 
+                "%-" + mnemonicMaxLength + "s  " + 
+                "%-" + operandMaxLength + "s   " + 
+                "%s\n"),                     
+                locationAddress,    
+                subObjectCode,
+                label, 
+                mnemonic,
+                operand,
+                comment));
+             
+        while(it < objectCode.length()) {
+             subObjectCode = objectCode.substring(
+                     it, it = Math.min(it + 6, objectCode.length()));   
+             line.append("     ");
+             line.append(subObjectCode);
+             line.append("\n");
+        }
+        if (errorsList != null) {
+            for (int i = 0; i < errorsList.size(); ++i) {
+                line.append("  **** ");
+                line.append(Constants.ErrorMessages.get(errorsList.get(i)));
+                line.append(". ****\n");
+            }
+        }
+        return line;
     }
 }
