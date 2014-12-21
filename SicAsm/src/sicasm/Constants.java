@@ -74,87 +74,67 @@ public final class Constants {
     
     public enum Errors {
         // Will be printed in order of decleration.
-        UNNAMED_PROGRAM (Target.LINE),
-        DUPLICATE_START (Target.LINE),
-        MISSING_START (Target.LINE),
-        MISSING_MNEMONIC (Target.LINE) ,
-        MISSING_OPERAND (Target.LINE),
+        UNNAMED_PROGRAM (Target.LINE, 
+            "Program must have a name (label must not be empty)"),
+        DUPLICATE_START (Target.LINE,
+            "Start statment must exist once and in the first line"),
+        MISSING_START (Target.LINE, 
+            "Program must begin with start statment"),
+        MISSING_MNEMONIC (Target.LINE, 
+            "Can not find the mnemonic") ,
+        MISSING_OPERAND (Target.LINE, 
+            "Can not find the operand"),
         
         
-        INVALID_LABEL_REPRESENTATION (Target.LABEL),
-        DUPLICATE_LABEL (Target.LABEL),
+        INVALID_LABEL_REPRESENTATION (Target.LABEL, 
+            ("Invalid label represenation (must only contain " + 
+                    "[A-Za-z0-9_] except first char without [0-9]")),
+        DUPLICATE_LABEL (Target.LABEL, 
+            "Dupliacted labels are not allowed"),
         
-        UNRECOGNIZED_MNEMONIC (Target.MNEMONIC),
+        UNRECOGNIZED_MNEMONIC (Target.MNEMONIC, 
+            "Unrecognized menmonic"),
         
-        ARITHMETIC_OVERFLOW (Target.OPERAND),
-        INVALID_ADDRESS_LOCATION (Target.OPERAND),
-        INVALID_BYTE_OPERAND (Target.OPERAND),
-        INVALID_HEX (Target.OPERAND),
-        INVALID_HEX_REPRESENTATION (Target.OPERAND),
-        INVALID_OPERAND (Target.OPERAND),
-        INVALID_RESERVE_OPERAND (Target.OPERAND),
-        INVALID_START_ADDRESS (Target.OPERAND),
-        INVALID_WORD_OPERAND (Target.OPERAND),
-        UNCLOSED_QUOTE (Target.OPERAND),
-        UNDEFINED_LABEL (Target.OPERAND) ,
-        WORD_OPERAND_OUT_OF_RANGE (Target.OPERAND);
+        ARITHMETIC_OVERFLOW (Target.OPERAND, 
+            "Location counter exceeded memory size (2^15)"),
+        INVALID_ADDRESS_LOCATION (Target.OPERAND, 
+            "Address location out of range (must be less than 0xFFFF)"),
+        INVALID_BYTE_OPERAND (Target.OPERAND,
+            "Invalid byte operand"),
+        INVALID_HEX (Target.OPERAND, 
+            "Expected valid hexadecimal number in operand"),
+        INVALID_HEX_REPRESENTATION (Target.OPERAND, 
+            "Number of hex digits must be even"),
+        INVALID_OPERAND (Target.OPERAND,
+            "Invalid operand"),
+        INVALID_RESERVE_OPERAND (Target.OPERAND, 
+            ("Invalid reserve operand (operand lead to arthimatic overflow)")),
+        INVALID_START_ADDRESS (Target.OPERAND, 
+            "Start address must be a hexadecimal number"),
+        INVALID_WORD_OPERAND (Target.OPERAND,
+            "Word operand must be a decimal integer"),
+        UNCLOSED_QUOTE (Target.OPERAND, 
+            "Can not find closing quote for byte operand"),
+        UNDEFINED_LABEL (Target.OPERAND, 
+            "Undefined label in operand") ,
+        WORD_OPERAND_OUT_OF_RANGE (Target.OPERAND, 
+            "Word operand is out of range (must be less than 2 ^ 23)");
         
-        private Target target;
+        private final Target target;
+        private final String message;
         
-        private Errors(Target target) {
+        private Errors(Target target, String message) {
             this.target = target;
+            this.message = message;
         }
 
         public Target getTarget() {
             return target;
-        }        
-    }
-    
-    public static final TreeMap<Errors, String> ErrorMessages = new TreeMap<>();
-    
-    static {
-        ErrorMessages.put(Errors.ARITHMETIC_OVERFLOW, 
-                "Location counter exceeded memory size (2^15)");       
-        ErrorMessages.put(Errors.DUPLICATE_LABEL, 
-                "Dupliacted labels are not allowed");
-        ErrorMessages.put(Errors.DUPLICATE_START, 
-                "Start statment must exist once and in the first line");
-        ErrorMessages.put(Errors.INVALID_ADDRESS_LOCATION, 
-                "Address location out of range (must be less than 0xFFFF)");        
-        ErrorMessages.put(Errors.INVALID_BYTE_OPERAND, 
-                "Invalid byte operand");
-        ErrorMessages.put(Errors.INVALID_HEX, 
-                "Expected valid hexadecimal number in operand");
-        ErrorMessages.put(Errors.INVALID_HEX_REPRESENTATION,
-                "Number of hex digits must be even");
-        ErrorMessages.put(Errors.INVALID_LABEL_REPRESENTATION,
-                ("Invalid label represenation (must only contain " + 
-                 "[A-Za-z0-9_] except first char without [0-9]"));        
-        ErrorMessages.put(Errors.INVALID_OPERAND, 
-                "Invalid operand");
-        ErrorMessages.put(Errors.INVALID_RESERVE_OPERAND, 
-                ("Invalid reserve operand " + 
-                 "(operand lead to arthimatic overflow)"));        
-        ErrorMessages.put(Errors.INVALID_START_ADDRESS, 
-                "Start address must be a hexadecimal number");
-        ErrorMessages.put(Errors.INVALID_WORD_OPERAND, 
-                "Word operand must be a decimal integer");
-        ErrorMessages.put(Errors.MISSING_MNEMONIC, 
-                "Can not find the mnemonic");
-        ErrorMessages.put(Errors.MISSING_OPERAND, 
-                "Can not find the operand");
-        ErrorMessages.put(Errors.MISSING_START, 
-                "Program must begin with start statment");        
-        ErrorMessages.put(Errors.UNCLOSED_QUOTE, 
-                "Can not find closing quote for byte operand");
-        ErrorMessages.put(Errors.UNDEFINED_LABEL, 
-                "Undefined label in operand");
-        ErrorMessages.put(Errors.UNNAMED_PROGRAM, 
-                "Program must have a name (label must not be empty)");        
-        ErrorMessages.put(Errors.UNRECOGNIZED_MNEMONIC, 
-                "Unrecognized menmonic");
-        ErrorMessages.put(Errors.WORD_OPERAND_OUT_OF_RANGE, 
-                "Word operand is out of range (must be less than 2 ^ 23)");        
+        }   
+
+        public String getMessage() {
+            return message;
+        } 
     }
     
     public static final String getRandomSymbols() {

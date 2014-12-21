@@ -184,7 +184,7 @@ public class SourceLine {
             for (int i = 0; i < errorsList.size(); ++i) {
                 line.append("  **** ");
                 line.append(getErrorTarget(errorsList.get(i).getTarget()));
-                line.append(Constants.ErrorMessages.get(errorsList.get(i)));
+                line.append(errorsList.get(i).getMessage());
                 line.append(". ****\n");
             }
         }
