@@ -2,7 +2,6 @@ package sicasm;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.io.PrintWriter;
 import java.math.BigInteger;
 import java.text.DateFormat;
@@ -11,17 +10,19 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.TreeMap;
 
+import sicasm.Constants.Errors;
+
 public final class ListFile {
-    private ArrayList<SourceLine> sourceLines;
+    private final ArrayList<SourceLine> sourceLines;
     private int locationCounter,
                 startAddress,
                 programLength;
     private TreeMap<String, Integer> symTable;
     private Boolean errorsExist;
-    private String fileDir;
+    private final String fileDir;
             
     public ListFile(String sourceFileName, Boolean gerenateListFile) 
-            throws IOException, Exception {
+            throws Exception {
         SourceLine.resetMaxLength();
         SourceFile sourceFile = new SourceFile(sourceFileName);
         fileDir = new File(sourceFileName).getParent();
@@ -73,15 +74,14 @@ public final class ListFile {
             ++lineNumber;
             sourceLine.setAddressLocation(locationCounter);
             if (locationCounter >= 0x8000) {
-                sourceLine.addError(Constants.Errors.ARITHMETIC_OVERFLOW);
+                sourceLine.addError(Errors.ARITHMETIC_OVERFLOW);
             }
             // Adding labels into symTable.
             if (!sourceLine.getLabel().isEmpty()) {
                 if (!isValidLabelRepresentation(sourceLine.getLabel())) {
-                    sourceLine.addError(
-                            Constants.Errors.INVALID_LABEL_REPRESENTATION);
+                    sourceLine.addError(Errors.INVALID_LABEL_REPRESENTATION);
                 } else if (symTable.containsKey(sourceLine.getLabel())) {
-                    sourceLine.addError(Constants.Errors.DUPLICATE_LABEL);
+                    sourceLine.addError(Errors.DUPLICATE_LABEL);
                 } else {
                     if (locationCounter >= 0x8000) {
                         symTable.put(sourceLine.getLabel(), 0xFFFF);
@@ -94,7 +94,7 @@ public final class ListFile {
             // Handeling Mnemonics and directives.
             String menomonic = sourceLine.getMnemonic().toUpperCase();
             if (menomonic.isEmpty()) {
-                sourceLine.addError(Constants.Errors.MISSING_MNEMONIC);
+                sourceLine.addError(Errors.MISSING_MNEMONIC);
             } else if (Constants.OpTable.containsKey(menomonic)) {
                 // Menomonic 'RSUB' does not need operand. So this should be 
                 // checked before checking if there is an oprand or not.
@@ -103,11 +103,11 @@ public final class ListFile {
                 // Add error after more checks in pass two.
             } else if (menomonic.equals("START")) {
                 if (lineNumber != 0) {
-                    sourceLine.addError(Constants.Errors.DUPLICATE_START);
+                    sourceLine.addError(Errors.DUPLICATE_START);
                 }
                 startFound = true;
                 if (sourceLine.getLabel().isEmpty()) {
-                    sourceLine.addError(Constants.Errors.UNNAMED_PROGRAM);
+                    sourceLine.addError(Errors.UNNAMED_PROGRAM);
                 } else {
                     progName = sourceLine.getLabel();                    
                 }
@@ -117,12 +117,11 @@ public final class ListFile {
                         locationCounter = Integer.parseInt(operand, 16);
                         startAddress = locationCounter;
                     } else {
-                        sourceLine.addError(
-                                Constants.Errors.INVALID_ADDRESS_LOCATION);
+                        sourceLine.addError(Errors.INVALID_ADDRESS_LOCATION);
                     }
                 } else {
                     locationCounter = 0;
-                    sourceLine.addError(Constants.Errors.INVALID_START_ADDRESS);
+                    sourceLine.addError(Errors.INVALID_START_ADDRESS);
                 }                 
             } else if (menomonic.equals("END")) {
                 endFound = true;
@@ -141,38 +140,39 @@ public final class ListFile {
                     }
                 }
             } else if (menomonic.equals("RESW") || menomonic.equals("RESB")) {
-                int mutli = 0;
-                if (menomonic.equals("RESW")) mutli = 3;
-                else  mutli = 1;
+                int multi;
+                if (menomonic.equals("RESW")) {
+                    multi = 3;
+                } else {
+                    multi = 1;
+                }
                 if (isValidReserveOperand(sourceLine.getOperand())) {
                     if (isInRange(sourceLine.getOperand(), 10, 0x8000)) {
                         int toBeReserved = Integer.parseInt(
-                                sourceLine.getOperand()) * mutli;
+                                sourceLine.getOperand()) * multi;
                          if (toBeReserved + locationCounter < 0x8000) {
                              locationCounter += toBeReserved;
                          } else {
                              sourceLine.addError(
-                                     Constants.Errors.INVALID_RESERVE_OPERAND);
+                                     Errors.INVALID_RESERVE_OPERAND);
                              locationCounter = 0xFFFF;
                          }
                     } else {
-                        sourceLine.addError(
-                                Constants.Errors.INVALID_RESERVE_OPERAND);
+                        sourceLine.addError(Errors.INVALID_RESERVE_OPERAND);
                         locationCounter = 0xFFFF;
                     }               
                 } else {
-                    sourceLine.addError(Constants.Errors.INVALID_OPERAND);
+                    sourceLine.addError(Errors.INVALID_OPERAND);
                 }
             } else {
-                sourceLine.addError(Constants.Errors.UNRECOGNIZED_MNEMONIC);
+                sourceLine.addError(Errors.UNRECOGNIZED_MNEMONIC);
             }
         }
         if (!firstUnCommentedLineFound) {
             throw new Exception("No SIC commands found!");
         }
         if (!startFound) {
-             sourceLines.get(firstCodeLine).addError(
-                     Constants.Errors.MISSING_START);
+             sourceLines.get(firstCodeLine).addError(Errors.MISSING_START);
         }
         if (!endFound) {
             // Must add random oprand name, to avoid the case of missing program
@@ -196,7 +196,7 @@ public final class ListFile {
             
             if (operand.isEmpty() && !menomonic.equals("RSUB") && 
                     !menomonic.equals("END")) {
-                sourceLine.addError(Constants.Errors.MISSING_OPERAND);
+                sourceLine.addError(Errors.MISSING_OPERAND);
             }
             // Handeling Mnemonics and directives.
             if (Constants.OpTable.containsKey(menomonic)) {                  
@@ -216,7 +216,7 @@ public final class ListFile {
                         hexCode |= operandNum;                        
                         objectCode = String.format("%06X", hexCode);
                     } else {
-                        sourceLine.addError(Constants.Errors.UNDEFINED_LABEL);                          
+                        sourceLine.addError(Errors.UNDEFINED_LABEL);                          
                     }                        
                 }                
             }  else if (sourceLine.getOperand().isEmpty()) {
@@ -237,11 +237,10 @@ public final class ListFile {
                             hexCode.length() - 6), hexCode.length());           
                 } else if (isValidWordOperand(operand) == 1) {
                     // Number out of range  
-                    sourceLine.addError(
-                            Constants.Errors.WORD_OPERAND_OUT_OF_RANGE);                        
+                    sourceLine.addError(Errors.WORD_OPERAND_OUT_OF_RANGE);                        
                 } else {
                     // Invalid word operand.
-                    sourceLine.addError(Constants.Errors.INVALID_WORD_OPERAND);
+                    sourceLine.addError(Errors.INVALID_WORD_OPERAND);
                 }              
             } else if (menomonic.equals("BYTE")) {
                 // Check there are no flag for unclosed quote.
@@ -260,16 +259,16 @@ public final class ListFile {
                             if (hexLength % 2 == 0) {
                                 objectCode = hexNumber.toUpperCase();
                             } else {
-                                sourceLine.addError(Constants.Errors.
-                                        INVALID_HEX_REPRESENTATION);
+                                sourceLine.addError(
+                                        Errors.INVALID_HEX_REPRESENTATION);
                             }
                         } else {
-                            sourceLine.addError(Constants.Errors.INVALID_HEX);
+                            sourceLine.addError(Errors.INVALID_HEX);
                         }
                     }
                 } else {
                     // Invalid Byte operand.
-                    sourceLine.addError(Constants.Errors.INVALID_BYTE_OPERAND);
+                    sourceLine.addError(Errors.INVALID_BYTE_OPERAND);
                 }
             } else if (menomonic.equals("RESW")) {
             } else if (menomonic.equals("RESB")) {

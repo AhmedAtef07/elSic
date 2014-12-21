@@ -73,7 +73,8 @@ public final class Constants {
     }
     
     public enum Errors {
-        // Will be printed in order of decleration.
+        // Errors will be printed in order of decleration.
+        // Line errors.
         UNNAMED_PROGRAM (Target.LINE, 
             "Program must have a name (label must not be empty)"),
         DUPLICATE_START (Target.LINE,
@@ -85,16 +86,18 @@ public final class Constants {
         MISSING_OPERAND (Target.LINE, 
             "Can not find the operand"),
         
-        
+        // Label errors.
         INVALID_LABEL_REPRESENTATION (Target.LABEL, 
             ("Invalid label represenation (must only contain " + 
                     "[A-Za-z0-9_] except first char without [0-9]")),
         DUPLICATE_LABEL (Target.LABEL, 
             "Dupliacted labels are not allowed"),
         
+        // Menomonic errors.
         UNRECOGNIZED_MNEMONIC (Target.MNEMONIC, 
             "Unrecognized menmonic"),
         
+        // Operand errors.
         ARITHMETIC_OVERFLOW (Target.OPERAND, 
             "Location counter exceeded memory size (2^15)"),
         INVALID_ADDRESS_LOCATION (Target.OPERAND, 
