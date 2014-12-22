@@ -108,6 +108,9 @@ public final class Constants {
             "Expected valid hexadecimal number in operand"),
         INVALID_HEX_REPRESENTATION (Target.OPERAND, 
             "Number of hex digits must be even"),
+        INVALID_LITERAL (Target.OPERAND, 
+            "Invalid literal, accept (decimal)\"=970\", (hexdecimal)"
+                    + "\"=x'A793D'\" or (string)\"=c'Ahmed Atef'\""),
         INVALID_OPERAND (Target.OPERAND,
             "Invalid operand"),
         INVALID_RESERVE_OPERAND (Target.OPERAND, 
@@ -121,7 +124,7 @@ public final class Constants {
         UNDEFINED_LABEL (Target.OPERAND, 
             "Undefined label in operand") ,
         WORD_OPERAND_OUT_OF_RANGE (Target.OPERAND, 
-            "Word operand is out of range (must be less than 2 ^ 23)");
+            "Operand value is out of range (must be less than 2 ^ 23)");
         
         private final Target target;
         private final String message;

@@ -18,6 +18,7 @@ public final class ListFile {
                 startAddress,
                 programLength;
     private TreeMap<String, Integer> symTable;
+    private ArrayList<Literal> literalTable;
     private Boolean errorsExist;
     private final String fileDir;
             
@@ -31,6 +32,7 @@ public final class ListFile {
             throw new Exception("File is empty!");
         }
         symTable = new TreeMap<>();
+        literalTable = new ArrayList<>();
         errorsExist = false;
         passOne();
         passTwo();
@@ -54,6 +56,101 @@ public final class ListFile {
         return true;
     }    
     
+    private boolean isLiteral(String operand) {
+        return operand.startsWith("=");
+    }
+    
+    private void fetchAndAddLiteral(final SourceLine sourceLine) {
+        String operand = sourceLine.getOperand().substring(1);
+        String hexCode = "";
+        int checkWordResult = checkWordOperand(operand);        
+        
+        if ((operand.startsWith("c") || operand.startsWith("c")) &&
+                operand.endsWith("'")) {
+            for (int i = 2; i < operand.length() - 1; i++) {
+                hexCode += String.format("%02X", (int)operand.charAt(i)); 
+            }
+        } else if ((operand.startsWith("x") || operand.startsWith("X")) &&
+                operand.endsWith("'")) {
+            String hexNumber = operand.substring(2, operand.length() - 1);
+            if (isHexInteger(hexNumber)) {     
+                int hexLength = operand.length() - 3;
+                if (hexLength % 2 == 0) {
+                    hexCode = hexNumber.toUpperCase();
+                } else {
+                    sourceLine.addError(Errors.INVALID_HEX_REPRESENTATION);
+                    return;
+                }
+            } else {
+                sourceLine.addError(Errors.INVALID_HEX);
+                return;
+            }
+        } else if (checkWordResult == 7) {
+            hexCode = getWordHexCode(operand);
+        } else if (checkWordResult == 1) {
+            sourceLine.addError(Errors.WORD_OPERAND_OUT_OF_RANGE);    
+            return;
+        } else {
+            sourceLine.addError(Errors.INVALID_LITERAL);
+            return;
+        }
+        literalTable.add(new Literal("=" + operand, hexCode));
+    }
+    
+    private int getLiteralHexCodeAddressLocation(String hexCode) {
+        for (Literal literal: literalTable) {
+            if (literal.isUsed() && literal.getHexCode().equals(hexCode)) {
+                return literal.getAddressLocation();
+            }
+        }
+        return -1;
+    }
+    
+    private int getLiteralLocationAddress(String operand) {
+        for (Literal literal: literalTable) {
+            if (literal.getName().equals(operand)) {
+                return literal.getAddressLocation();
+            }
+        }
+        return -1;
+    }
+    
+    private ArrayList<SourceLine> getUnLocatedLiterals() {
+        ArrayList<SourceLine> literals = new ArrayList<>();
+        for (Literal literal: literalTable) {
+            if (!literal.isUsed()) {
+                int locationAddress = getLiteralHexCodeAddressLocation(
+                        literal.getHexCode());
+                if (locationAddress != -1) {
+                    literal.setAddressLocation(locationAddress);
+                } else {
+                    literal.setAddressLocation(locationCounter);
+                    locationCounter += literal.getHexCode().length() / 2;
+                    literal.setAsUsed();
+                    literals.add(new SourceLine(literal));                    
+                }
+            }
+        }
+        if (!literals.isEmpty()) {
+            literals.add(0, new SourceLine(
+                    "........  Literal decleartion start. ........"));
+            literals.add(new SourceLine(
+                    "........  Literal decleartion end.  ........"));
+        }
+        return literals;
+    }
+    
+    private String getWordHexCode(String operand) {
+        String hexCode = String.format("%06X", Integer.parseInt(
+                    operand));
+        // Java integer is 4 bytes, SIC's is 3 bytes.
+        // In case of negative number, the hex representation will 
+        // be in 2's complement of 4 bytes, so only 3 bytes are 
+        // taken from the right.
+        return hexCode.substring(Math.max(0, hexCode.length() - 6),
+                hexCode.length());     
+    }
+    
     private void passOne() throws Exception {
         String progName = "Prog";
         int lineNumber = -1,
@@ -61,7 +158,9 @@ public final class ListFile {
         boolean startFound = false,
                 firstUnCommentedLineFound = false, 
                 endFound = false;
-        for (SourceLine sourceLine : sourceLines) {
+        
+        for(int i = 0; i < sourceLines.size(); ++i) {
+            SourceLine sourceLine = sourceLines.get(i);
             if (!firstUnCommentedLineFound) ++firstCodeLine;
             if (sourceLine.isLineComment()) {
                 continue;
@@ -76,42 +175,50 @@ public final class ListFile {
             if (locationCounter >= 0x8000) {
                 sourceLine.addError(Errors.ARITHMETIC_OVERFLOW);
             }
+            String label = sourceLine.getLabel();
+            String menomonic = sourceLine.getMnemonic().toUpperCase();
+            String operand = sourceLine.getOperand();
+
             // Adding labels into symTable.
-            if (!sourceLine.getLabel().isEmpty()) {
-                if (!isValidLabelRepresentation(sourceLine.getLabel())) {
+            if (!label.isEmpty()) {
+                if (!isValidLabelRepresentation(label)) {
                     sourceLine.addError(Errors.INVALID_LABEL_REPRESENTATION);
-                } else if (symTable.containsKey(sourceLine.getLabel())) {
+                } else if (symTable.containsKey(label)) {
                     sourceLine.addError(Errors.DUPLICATE_LABEL);
                 } else {
                     if (locationCounter >= 0x8000) {
-                        symTable.put(sourceLine.getLabel(), 0xFFFF);
+                        symTable.put(label, 0xFFFF);
                     } else {
-                        symTable.put(sourceLine.getLabel(), locationCounter);                        
+                        symTable.put(label, locationCounter);                        
                     }
                 }
             }
 
+            // Adding literals into literalTable.
+            if (isLiteral(operand)) {
+                fetchAndAddLiteral(sourceLine);
+            }
+            
             // Handeling Mnemonics and directives.
-            String menomonic = sourceLine.getMnemonic().toUpperCase();
             if (menomonic.isEmpty()) {
                 sourceLine.addError(Errors.MISSING_MNEMONIC);
             } else if (Constants.OpTable.containsKey(menomonic)) {
                 // Menomonic 'RSUB' does not need operand. So this should be 
                 // checked before checking if there is an oprand or not.
                 locationCounter += 3;
-            } else if (sourceLine.getOperand().isEmpty()) {
+            } else if (operand.isEmpty() && !menomonic.equals("LTORG") 
+                    && !menomonic.equals("END")) {
                 // Add error after more checks in pass two.
             } else if (menomonic.equals("START")) {
                 if (lineNumber != 0) {
                     sourceLine.addError(Errors.DUPLICATE_START);
                 }
                 startFound = true;
-                if (sourceLine.getLabel().isEmpty()) {
+                if (label.isEmpty()) {
                     sourceLine.addError(Errors.UNNAMED_PROGRAM);
                 } else {
-                    progName = sourceLine.getLabel();                    
+                    progName = label;                    
                 }
-                String operand = sourceLine.getOperand();
                 if (isHexInteger(operand)) {
                     if(isInRange(operand, 16, 0x8000)) {
                         locationCounter = Integer.parseInt(operand, 16);
@@ -125,14 +232,18 @@ public final class ListFile {
                 }                 
             } else if (menomonic.equals("END")) {
                 endFound = true;
+                ArrayList<SourceLine> addedLiterals = getUnLocatedLiterals();
+                for(SourceLine literalSourceLine: addedLiterals) {
+                    sourceLines.add(i, literalSourceLine);
+                    i++;
+                }
             } else if (menomonic.equals("WORD")) {
                 locationCounter += 3;
             } else if (menomonic.equals("BYTE")) {
-                String op = sourceLine.getOperand();
-                if (op.charAt(0) == 'c' || op.charAt(0) == 'C') {
-                    locationCounter += op.length() - 3;
-                } else if (op.charAt(0) == 'x' || op.charAt(0) == 'X') {
-                    int hexLength = op.length() - 3;
+                if (operand.charAt(0) == 'c' || operand.charAt(0) == 'C') {
+                    locationCounter += operand.length() - 3;
+                } else if (operand.charAt(0) == 'x' || operand.charAt(0) == 'X') {
+                    int hexLength = operand.length() - 3;
                     if (hexLength % 2 == 0) {
                         locationCounter += hexLength / 2;
                     } else {
@@ -146,10 +257,9 @@ public final class ListFile {
                 } else {
                     multi = 1;
                 }
-                if (isValidReserveOperand(sourceLine.getOperand())) {
-                    if (isInRange(sourceLine.getOperand(), 10, 0x8000)) {
-                        int toBeReserved = Integer.parseInt(
-                                sourceLine.getOperand()) * multi;
+                if (isValidReserveOperand(operand)) {
+                    if (isInRange(operand, 10, 0x8000)) {
+                        int toBeReserved = Integer.parseInt(operand) * multi;
                          if (toBeReserved + locationCounter < 0x8000) {
                              locationCounter += toBeReserved;
                          } else {
@@ -164,6 +274,13 @@ public final class ListFile {
                 } else {
                     sourceLine.addError(Errors.INVALID_OPERAND);
                 }
+            } else if (menomonic.equals("LTORG")) {
+                ArrayList<SourceLine> addedLiterals = getUnLocatedLiterals();
+                System.out.println(addedLiterals.size());
+                for(SourceLine literalSourceLine: addedLiterals) {
+                    i++;
+                    sourceLines.add(i, literalSourceLine);
+                }
             } else {
                 sourceLine.addError(Errors.UNRECOGNIZED_MNEMONIC);
             }
@@ -174,9 +291,14 @@ public final class ListFile {
         if (!startFound) {
              sourceLines.get(firstCodeLine).addError(Errors.MISSING_START);
         }
+        
         if (!endFound) {
-            // Must add random oprand name, to avoid the case of missing program
-            // name.
+            // Adding un located literals.
+            ArrayList<SourceLine> addedLiterals = getUnLocatedLiterals();
+            for(SourceLine literalSourceLine: addedLiterals) {
+                sourceLines.add(literalSourceLine);
+            }
+
             SourceLine endLine = new SourceLine("", "END", progName,
                      "Automatically added by elSic.");            
              sourceLines.add(endLine);
@@ -186,7 +308,7 @@ public final class ListFile {
     
     private void passTwo() {
         for (SourceLine sourceLine : sourceLines) {
-            if (sourceLine.isLineComment()) {
+            if (sourceLine.isLineComment() || sourceLine.isLiteral()) {
                 continue;
             }
             
@@ -195,7 +317,7 @@ public final class ListFile {
             String operand = sourceLine.getOperand();
             
             if (operand.isEmpty() && !menomonic.equals("RSUB") && 
-                    !menomonic.equals("END")) {
+                    !menomonic.equals("LTORG") && !menomonic.equals("END")) {
                 sourceLine.addError(Errors.MISSING_OPERAND);
             }
             // Handeling Mnemonics and directives.
@@ -211,9 +333,14 @@ public final class ListFile {
                         operand = operand.substring(0, operand.length() - 2);
                     }
                     if (symTable.containsKey(operand)) {
-                        int operandNum = symTable.get(operand);
-                        if (indexed) operandNum |= 1 << 15; 
-                        hexCode |= operandNum;                        
+                        int operandAddress = symTable.get(operand);
+                        if (indexed) operandAddress |= 1 << 15; 
+                        hexCode |= operandAddress;                        
+                        objectCode = String.format("%06X", hexCode);
+                    } else if (isLiteral(operand)) {                       
+                        int operandAddress = getLiteralLocationAddress(operand);
+                        if (indexed) operandAddress |= 1 << 15; 
+                        hexCode |= operandAddress;                        
                         objectCode = String.format("%06X", hexCode);
                     } else {
                         sourceLine.addError(Errors.UNDEFINED_LABEL);                          
@@ -223,23 +350,15 @@ public final class ListFile {
                 // Error would be already added. This just to make sure coming 
                 // conditions will be only satisfied in case there is an oprand.
             } else if (menomonic.equals("START")) {
-                // Error was already set in pass one in case of duplicates.
+                // Error was already added in pass one in case of duplicates.
             } else if (menomonic.equals("END")) {
             } else if (menomonic.equals("WORD")) {
-                if (isValidWordOperand(operand) == 7) {
-                    String hexCode = String.format("%06X", Integer.parseInt(
-                            operand));
-                    // Java integer is 4 bytes, SIC's is 3 bytes.
-                    // In case of negative number, the hex representation will 
-                    // be in 2's complement of 4 bytes, so only 3 bytes are 
-                    // taken from the right.
-                    objectCode = hexCode.substring(Math.max(0, 
-                            hexCode.length() - 6), hexCode.length());           
-                } else if (isValidWordOperand(operand) == 1) {
-                    // Number out of range  
+                int checkResult = checkWordOperand(operand);
+                if (checkResult == 7) {
+                    objectCode = getWordHexCode(operand);
+                } else if (checkResult == 1) {
                     sourceLine.addError(Errors.WORD_OPERAND_OUT_OF_RANGE);                        
                 } else {
-                    // Invalid word operand.
                     sourceLine.addError(Errors.INVALID_WORD_OPERAND);
                 }              
             } else if (menomonic.equals("BYTE")) {
@@ -317,7 +436,12 @@ public final class ListFile {
         return true;
     }
     
-    private int isValidWordOperand(String operand) {
+    /**
+     * @return 0: Not a valid word operand.
+     * 1: Out of range number (Max 0x7FFFFF).
+     * 7: Valid word operand.
+     */  
+    private int checkWordOperand(String operand) {
         for (int i = 0; i < operand.length(); i++) {
             if (i == 0 && operand.charAt(0) == '-') continue;
             if (!(operand.charAt(i) >= '0' && operand.charAt(i) <= '9')){
@@ -330,7 +454,7 @@ public final class ListFile {
         return 7;
     }
     
-    boolean isInRange(String number, int numberRadix, int range) {
+    private boolean isInRange(String number, int numberRadix, int range) {
         BigInteger big = new BigInteger(number, numberRadix);
         big = big.abs();
         BigInteger maxInt = BigInteger.valueOf(range);

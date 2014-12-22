@@ -1,5 +1,6 @@
 package sicasm;
 
+import com.sun.xml.internal.ws.api.message.saaj.SAAJFactory;
 import java.util.ArrayList;
 
 public class SourceLine {
@@ -10,11 +11,15 @@ public class SourceLine {
                    objectCode;
     private int addressLocation,
                 errors;
-    private boolean isLineComment;
+    private boolean isLineComment,
+            isLiteral;
     
     private static int labelMaxLength, 
                        mnemonicMaxLength, 
                        operandMaxLength;
+    
+    private static String errorTargetFormat = "{\"%s\"} ";
+    private static String errorMessageFormat = "  **** %s%s. ****\n";
     
     public SourceLine(String label, String mnemonic, String operand, 
                       String comment) {
@@ -22,7 +27,6 @@ public class SourceLine {
         this.mnemonic = mnemonic;
         this.operand = operand;
         this.comment = comment;
-        isLineComment = false;
         labelMaxLength = Math.max(labelMaxLength, label.length());
         mnemonicMaxLength = Math.max(mnemonicMaxLength, mnemonic.length());
         operandMaxLength = Math.max(operandMaxLength, operand.length());
@@ -33,6 +37,16 @@ public class SourceLine {
         isLineComment = true;
     }
 
+    public SourceLine(Literal literal) {
+        label = "*";
+        mnemonic = literal.getName();
+        operand = "";
+        comment = "";
+        objectCode = literal.getHexCode();
+        addressLocation = literal.getAddressLocation();
+        isLiteral = true;
+    }
+    
     public String getLabel() {
         return label;
     }
@@ -67,6 +81,10 @@ public class SourceLine {
 
     public boolean isLineComment() {
         return isLineComment;
+    }
+    
+    public boolean isLiteral() {
+        return isLiteral;
     }
     
     public void convertToLineComment() {
@@ -115,14 +133,14 @@ public class SourceLine {
         operandMaxLength = 0;
     }
     
-    private String getErrorTarget(Constants.Target target) {
+    private String getErrorTargetString(Constants.Target target) {
         switch (target) {
             case LABEL:
-                return "{\"" + label + "\"} ";
+                return String.format(errorTargetFormat, label);
             case MNEMONIC:
-                return "{\"" + mnemonic + "\"} ";
+                return String.format(errorTargetFormat, mnemonic);
             case OPERAND:
-                return "{\"" + operand + "\"} ";
+                return String.format(errorTargetFormat, operand);
             default:
                 return "";
         }
@@ -181,11 +199,10 @@ public class SourceLine {
              line.append("\n");
         }
         if (errorsList != null) {
-            for (int i = 0; i < errorsList.size(); ++i) {
-                line.append("  **** ");
-                line.append(getErrorTarget(errorsList.get(i).getTarget()));
-                line.append(errorsList.get(i).getMessage());
-                line.append(". ****\n");
+            for (Constants.Errors error : errorsList) {
+                line.append(String.format(errorMessageFormat, 
+                        getErrorTargetString(error.getTarget()),
+                        error.getMessage()));
             }
         }
         return line;
