@@ -3,7 +3,7 @@ package sicasm;
 import java.io.*;
 import java.util.*;
 
-public class SourceFile {
+public final class SourceFile {
 
     public ArrayList<SourceLine> getTokenz() {
         return new ArrayList<SourceLine>(file);
@@ -24,7 +24,8 @@ public class SourceFile {
         }
         in.close();
     }
-    public SourceFile(String filename) throws FileNotFoundException, IOException {
+    public SourceFile(String filename) throws FileNotFoundException, 
+            IOException {
         
         file = new ArrayList<SourceLine>();
         loadlabels(filename);
@@ -40,6 +41,7 @@ public class SourceFile {
         while ((input = in.readLine()) != null) {
             label = mnemonic = comment = operand = "";
             unclosedQuote = false;
+            literal = false;
             if (input.isEmpty())
                 continue;
             int i;
@@ -69,7 +71,11 @@ public class SourceFile {
             temp = buildtospace(i, input);
             i = temp.next;
             mnemonic = temp.str;
-            if (is_C_or_X(i, input)&&mnemonic.equalsIgnoreCase("byte"))
+            if ( isLiteral(i, input)) {
+                temp = buildLiteral(i, input);
+                literal = true;
+            }
+            else if (is_C_or_X(i, input)&&mnemonic.equalsIgnoreCase("byte"))
                 temp = buildwithquote(i, input);
             else
                 temp = buildtospace(i, input);
@@ -89,13 +95,31 @@ public class SourceFile {
                 operand = "";
             }
             SourceLine AXX = new SourceLine(label, mnemonic, operand, comment);
-            if (unclosedQuote&&mnemonic.equalsIgnoreCase("byte"))
+            if (unclosedQuote&&(literal ||mnemonic.equalsIgnoreCase("byte")))
                 AXX.addError(Constants.Errors.UNCLOSED_QUOTE);
             file.add(AXX);
         }
         in.close();
     }
+    
     private boolean unclosedQuote;
+    private boolean literal;
+    
+    private StringandNext buildLiteral(int starting, String line) {
+        StringBuilder ret = new StringBuilder("");
+        ret.append(line.charAt(starting));
+        ret.append(line.charAt(starting+1));
+        ret.append(line.charAt(starting+2));
+        int i;     
+        for(i = starting+3 ; i < line.length() && line.charAt(i) != 39 ; i++)
+            ret.append(line.charAt(i));
+        if (i == line.length()) unclosedQuote = true;
+        else {
+            ret.append((char)39);
+            i++;
+        }
+        return new StringandNext(ret.toString(), i, line);
+    }
 
     private StringandNext buildtospace(int starting, String line) {
         StringBuilder ret = new StringBuilder("");
@@ -145,6 +169,17 @@ public class SourceFile {
         return ret.toString();
     }
 
+    private boolean isLiteral(int idx, String CC) {
+        if(idx + 2 >= CC.length()) return false;
+        StringBuilder build = new StringBuilder("");
+        build.append(CC.charAt(idx));
+        build.append(CC.charAt(idx+1));
+        build.append(CC.charAt(idx+2));
+        String ret = build.toString();
+        return ret.equals("=x'") || ret.equals("=X'") || ret.equals("=c'")
+                || ret.equals("=C'");
+    }
+    
     private boolean is_C_or_X(int idx, String CC) {
         if (idx + 1 >= CC.length())
             return false;
@@ -152,7 +187,8 @@ public class SourceFile {
         tt.append(CC.charAt(idx));
         tt.append(CC.charAt(idx + 1));
         String C = tt.toString();
-        return C.equals("C'") || C.equals("c'") || C.equals("x'") || C.equals("X'");
+        return C.equals("C'") || C.equals("c'") || C.equals("x'") 
+                || C.equals("X'");
     }
 
     private class StringandNext {
