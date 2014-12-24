@@ -11,12 +11,12 @@ public class ExpressionTerm {
     
     private int value;
     private Sign sign;
-    private String Label;
+    private String label;
 
-    public ExpressionTerm(int value, Sign sign, String Label) {
+    public ExpressionTerm(int value, Sign sign, String label) {
         this.value = value;
         this.sign = sign;
-        this.Label = Label;
+        this.label = label;
     }
 
     public void setValue(int value) {
@@ -32,7 +32,7 @@ public class ExpressionTerm {
     }
 
     public String getLabel() {
-        return Label;
+        return label;
     }
     
 }
