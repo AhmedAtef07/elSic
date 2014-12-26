@@ -100,6 +100,30 @@ public class Expression {
     }
     
     public int evaluate() {
-        return value;
+        Stack<Integer> term = new Stack<Integer>();
+        Stack<ExpressionTerm.Sign> op = new Stack<ExpressionTerm.Sign>();
+        term.push(terms.get(0).getValue());
+        for( int i = 1 ; i < terms.size() ; i ++) {
+            if ( terms.get(i).getSign() == ExpressionTerm.Sign.TIMES 
+              || terms.get(i).getSign() == ExpressionTerm.Sign.DIVIDE ) {
+              int x = terms.get(i).getValue();
+              int y = term.pop();
+              if( terms.get(i).getSign() == ExpressionTerm.Sign.TIMES )
+                term.push(y*x);
+              else term.push(y/x);
+            } else {
+                term.push(terms.get(i).getValue());
+                op.push(terms.get(i).getSign());
+            }
+        }
+        while(!op.empty()) {
+            ExpressionTerm.Sign oper = op.pop();
+            int x = term.pop();
+            int y = term.pop();
+            if ( oper == ExpressionTerm.Sign.PLUS )
+                term.push(x+y);
+            else term.push(y-x);
+        }
+        return value = term.pop();
     }
 }
