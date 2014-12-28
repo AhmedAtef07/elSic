@@ -15,15 +15,14 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.time.Clock;
 import java.util.Scanner;
-import java.util.Spliterators;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.util.Stack;
 import javax.swing.ImageIcon;
 
 import javax.swing.JButton;
@@ -36,16 +35,24 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
-import javax.swing.UIManager;
-import javax.swing.UIManager.LookAndFeelInfo;
+import javax.swing.text.Document;
 import javax.swing.text.Highlighter;
+import javax.swing.text.JTextComponent;
 
 public class GUI extends JFrame {
         private String RunningAbsolutePath;
+        Stack <String> undoStack = new Stack();
+        Stack <String> redoStack = new Stack();
+        private String Finder;
+        private String LastAction;
         private String absolutePath ;
+        private boolean SpaceChecker = false ;
         private boolean helperBoolean;
-	JButton LisFile = new JButton("List File");
+        private boolean findControl = false;
+        private boolean delay = false;;
         Highlighter.HighlightPainter mySelector = new MyPainter(Color.BLUE);
+        Highlighter.HighlightPainter myUnSelector = new MyPainter(Color.WHITE);
+	JButton LisFile = new JButton("List File");
 	JButton ObjFile = new JButton("Object File");  
 	JButton Run = new JButton("Run Assembler");
 	JButton Clear = new JButton("Clear");
@@ -54,7 +61,8 @@ public class GUI extends JFrame {
         JButton SaveAs = new JButton("Save As");
         JButton Help = new JButton("Help");
         String helping  = "Ctrl S -> Save\nCtrl O ->Open\nCtrl Shift S -> Save as\n"
-                + "Ctrl L -> Listfile\n Ctrl J -> ObjFile\nCtrl R -> Run";
+                + "Ctrl L -> Listfile\nCtrl J -> ObjFile\nCtrl R -> Run\n"
+                + "Ctrl F -> Find";
 	JTextArea input = new JTextArea(30,70);
 	JScrollPane scroll ;
 	JFileChooser chooser = new JFileChooser();
@@ -105,6 +113,7 @@ public class GUI extends JFrame {
                          if((e.getKeyCode() == KeyEvent.VK_S)  &&  
                                  e.isControlDown() && e.isShiftDown() ){
                              Saving();
+                             
                          }
                          else if ((e.getKeyCode() == KeyEvent.VK_S) && 
                                  ((e.getModifiers() & KeyEvent.CTRL_MASK) != 0)){
@@ -134,15 +143,40 @@ public class GUI extends JFrame {
                                  ((e.getModifiers() & KeyEvent.CTRL_MASK) != 0)){
                              Running();
                          }
-                         else status.setText("Think before you code .. Coders don't need luck ");
-                       
+                         else if((e.getKeyCode() == KeyEvent.VK_F) && 
+                                 ((e.getModifiers() & KeyEvent.CTRL_MASK) != 0)){
+                             Find();
+                         }
+                         else if((e.getKeyCode() == KeyEvent.VK_DELETE) || 
+                                 (e.getKeyCode() == KeyEvent.VK_BACK_SPACE) ||
+                                 (e.getKeyCode() == KeyEvent.VK_ENTER) ||
+                                 e.getKeyCode() == KeyEvent.VK_SPACE){
+                             if(SpaceChecker == false)makeAction();
+                             SpaceChecker= true ;
+                         }
+                         else if((e.getKeyCode() == KeyEvent.VK_Z) && e.isControlDown()){
+                             undoAction();
+                         }
+                         else if((e.getKeyCode() == KeyEvent.VK_Z) && e.isControlDown() && e.isShiftDown()){
+                             redoAction();
+                         }
+                         else {
+                             LastAction = input.getText();
+                             SpaceChecker = false ;
+                             status.setText("Think before you code .. Coders don't need luck ");
+                         }
+                        if(findControl == true || delay == true)
+                         unFind();
                     } 
                     @Override
                     public void keyReleased(KeyEvent e) {
                        
                     }
                 } 
-                );
+                );              
+                this.addMouseListener(MouseList);
+                input.requestFocus();
+                input.addMouseListener(MouseList);
 		LisFile.addActionListener(new ActionListener() {
 			 
             public void actionPerformed(ActionEvent e)
@@ -217,6 +251,7 @@ public class GUI extends JFrame {
                 components.setBackground(new Color(0,0,0,50));
                 //components.set
                 components.setLayout(new BorderLayout());
+                //components.setPreferredSize(new Dimension(this.getWidth()-200,this.getHeight()-200));
 		components.add(west,BorderLayout.WEST);
                 components.add(south,BorderLayout.SOUTH);
                 components.add(scroll,BorderLayout.CENTER);
@@ -228,9 +263,24 @@ public class GUI extends JFrame {
 		setVisible(true);
                 //frame.setVisible(true);
 	}
-	
-        
-        
+	private void makeAction(){
+            undoStack.push(LastAction);
+        }
+        private void undoAction(){
+            redoStack.push(input.getText());
+            input.setText(undoStack.pop());
+        }
+        private void redoAction(){
+            input.setText(redoStack.pop());
+        }
+        private void Find(){
+            Finder = JOptionPane.showInputDialog("Enter the Text you w"
+                    + "ant to find");
+            HighLight(input, Finder , false);
+        }
+        private void unFind(){
+            HighLight(input, Finder ,true);
+        }
         private String Save(){
             if(absolutePath == null)
                 return Saving();
@@ -392,4 +442,79 @@ public class GUI extends JFrame {
             super(SelectorColor);
             }
         }
+        
+        private void HighLight(JTextComponent MyArea,String Finder,boolean unfinder){
+            if(findControl == false && unfinder == false){
+                try{
+                    Highlighter Lite =  MyArea.getHighlighter();
+                    Document doc = MyArea.getDocument();
+                    String Text = doc.getText(0,doc.getLength());
+                    int position= 0;
+                    while((position=Text.toUpperCase().indexOf(Finder.toUpperCase(),position))>=0){
+                        Lite.addHighlight(position, position+Finder.length(), mySelector);
+                        position += Finder.length();
+                    }
+                    findControl = true ;
+                    delay = true;
+                }
+                catch(Exception e){
+                    status.setText("Something went wrong with the finder");
+                }
+            }
+            else if(findControl == true && delay == true)
+            {
+               // Finder = null ;
+                delay=false;
+            }
+            else{
+                try{
+                    Highlighter Lite =  MyArea.getHighlighter();
+                    Document doc = MyArea.getDocument();
+                    String Text = doc.getText(0,doc.getLength());
+                    int position= 0;
+                    System.out.println("removed");
+                    //while((position=Text.toUpperCase().indexOf(Finder.toUpperCase(),position))>=0){
+                        Lite.removeAllHighlights();//Highlight(position, position+Finder.length(), myUnSelector);
+                        //position += Finder.length();
+                    //}
+                findControl = false ;
+                }
+                catch(Exception e){
+                    status.setText("Something went wrong with the finder");
+                }
+            }
+            
+        }
+        
+        MouseListener MouseList = new MouseListener() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if(findControl == true || Finder != null)
+                   unFind();
+            }
+
+            @Override
+            public void mousePressed(MouseEvent e) {
+                if(findControl == true || Finder != null)
+                    unFind();
+            }
+
+            @Override
+            public void mouseReleased(MouseEvent e) {
+               if(findControl == true || Finder!=null)
+                    unFind();
+            }
+
+            @Override
+            public void mouseEntered(MouseEvent e) {
+               if(findControl == true || Finder!=null)
+                    unFind();
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+                if(findControl == true || Finder!=null)
+                    unFind();
+            }
+        };
 }
