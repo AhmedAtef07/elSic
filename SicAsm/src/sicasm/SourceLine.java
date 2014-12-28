@@ -91,8 +91,8 @@ public class SourceLine {
         return isExpression;
     }
 
-    public void setExpression(boolean isExpression) {
-        this.isExpression = isExpression;
+    public void setAsExpression() {
+        isExpression = true;
     }
     
     public void convertToLineComment() {

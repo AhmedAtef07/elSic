@@ -95,7 +95,9 @@ public final class SourceFile {
                 operand = "";
             }
             SourceLine AXX = new SourceLine(label, mnemonic, operand, comment);
-            if (unclosedQuote&&(literal ||mnemonic.equalsIgnoreCase("byte")))
+            if (isExpression(operand))
+                AXX.setAsExpression();
+            if (unclosedQuote&&(literal || mnemonic.equalsIgnoreCase("byte")))
                 AXX.addError(Constants.Errors.UNCLOSED_QUOTE);
             file.add(AXX);
         }
@@ -104,6 +106,17 @@ public final class SourceFile {
     
     private boolean unclosedQuote;
     private boolean literal;
+    
+    private boolean isExpression(String exp) {
+        for(int i = 0 ; i < exp.length() ; ++i)
+            if ( isOperator(exp.charAt(i)) )
+                return true;
+        return false;
+    }
+    
+    private boolean isOperator(char x) {
+        return x == '-' || x == '*' || x == '+' || x == '/';
+    }
     
     private StringandNext buildLiteral(int starting, String line) {
         StringBuilder ret = new StringBuilder("");
