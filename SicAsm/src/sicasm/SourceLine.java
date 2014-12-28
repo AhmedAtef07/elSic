@@ -1,6 +1,5 @@
 package sicasm;
 
-import com.sun.xml.internal.ws.api.message.saaj.SAAJFactory;
 import java.util.ArrayList;
 
 public class SourceLine {
@@ -12,7 +11,8 @@ public class SourceLine {
     private int addressLocation,
                 errors;
     private boolean isLineComment,
-            isLiteral;
+                    isLiteral,
+                    isExpression;
     
     private static int labelMaxLength, 
                        mnemonicMaxLength, 
@@ -85,6 +85,14 @@ public class SourceLine {
     
     public boolean isLiteral() {
         return isLiteral;
+    }
+
+    public boolean isExpression() {
+        return isExpression;
+    }
+
+    public void setExpression(boolean isExpression) {
+        this.isExpression = isExpression;
     }
     
     public void convertToLineComment() {

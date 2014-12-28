@@ -124,7 +124,25 @@ public final class Constants {
         UNDEFINED_LABEL (Target.OPERAND, 
             "Undefined label in operand") ,
         WORD_OPERAND_OUT_OF_RANGE (Target.OPERAND, 
-            "Operand value is out of range (must be less than 2 ^ 23)");
+            "Operand value is out of range (must be less than 2 ^ 23)"),
+        
+        // Expression Errors.
+        EXPRESSION_LABEL_UNDEFINED (Target.OPERAND, 
+            "Undefined label in expression"),
+        EXPRESSION_ODD_RELATIVE_TERMS (Target.OPERAND, 
+            "Unpaired relative terms in expression "
+                    + "(terms must have opposite signs)"),
+        EXPRESSION_INVALID_RELATIVE_OPERATOR (Target.OPERAND, 
+            "Relative terms in expression must be preceded only by + or -"),
+        EXPRESSION_ILLEGAL_START(Target.OPERAND, 
+            "Expression must not start with * or /"),
+        EXPRESSION_ILLEGAL_END (Target.OPERAND, 
+            "Expression must not end with an operator (+, -, * or /)"),
+        EXPRESSION_ZERO_DIVISION (Target.OPERAND, 
+            "Division by zero detected in expression"),
+        EXPRESSION_INVALID_UNARY_OPERATOR (Target.OPERAND, 
+            "Invalid unary operator in expression "
+                    + "(+ or - can not be followed by * or /)");
         
         private final Target target;
         private final String message;

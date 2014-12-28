@@ -2,23 +2,33 @@ package sicasm;
 
 public class ExpressionTerm {
     
-    public enum Sign {
+    public enum Operator {
         PLUS,
         MINUS,
         TIMES,
         DIVIDE,
     }
     
+    public enum Sign {
+        POSTIVE,
+        NEGATIVE,
+    }
+    
     private int value;
-    private Sign sign;
+    private Operator operator;
     private String label;
-
-    public ExpressionTerm(int value, Sign sign, String label) {
-        this.value = value;
-        this.sign = sign;
+    
+    boolean isVariable;
+    
+    public ExpressionTerm(Operator operator, String label) {
+        this.operator = operator;
         this.label = label;
     }
-
+    
+    public ExpressionTerm(int value) {
+        this.value = value;
+    }
+    
     public void setValue(int value) {
         this.value = value;
     }
@@ -27,8 +37,8 @@ public class ExpressionTerm {
         return value;
     }
 
-    public Sign getSign() {
-        return sign;
+    public Operator getOperator() {
+        return operator;
     }
 
     public String getLabel() {
