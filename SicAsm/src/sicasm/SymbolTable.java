@@ -17,6 +17,10 @@ public class SymbolTable {
     public void add(String label, int addressLocation) {
         symbolList.add(new Symbol(label, addressLocation));
     }
+
+    public void add(String label, int addressLocation, int blockIndex) {
+        symbolList.add(new Symbol(label, addressLocation, blockIndex));
+    }    
     
     public Symbol get(int index) {
         return symbolList.get(index);

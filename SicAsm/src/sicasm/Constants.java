@@ -81,6 +81,8 @@ public final class Constants {
             "Start statment must exist once and in the first line"),
         MISSING_START (Target.LINE, 
             "Program must begin with start statment"),
+        MISSING_EQUATE_LABEL (Target.LINE, 
+            "Equate label must not be empty"),
         MISSING_MNEMONIC (Target.LINE, 
             "Can not find the mnemonic") ,
         MISSING_OPERAND (Target.LINE, 

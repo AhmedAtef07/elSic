@@ -21,6 +21,8 @@ public final class ListFile {
     private Boolean errorsExist;
     private final String fileDir;
     
+    private ExpressionManager expManager;
+        
     public ListFile(String sourceFileName, Boolean gerenateListFile) 
             throws Exception {
         SourceLine.resetMaxLength();
@@ -34,6 +36,8 @@ public final class ListFile {
         symTable = new SymbolTable();
         literalTable = new ArrayList<>();
         errorsExist = false;
+        expManager = ExpressionManager.getExpressionManager(symTable);
+        
         passOne();
         passTwo();
         if (gerenateListFile) {
@@ -281,6 +285,25 @@ public final class ListFile {
                     i++;
                     sourceLines.add(i, literalSourceLine);
                 }
+            } else if (menomonic.equals("EQU")) {   
+                // TODO(ahmedatef): set prograrm block index to -1 when adding
+                // program blocks.
+                if (operand.equals("*")) {
+                    symTable.add(label, locationCounter, -1);
+                } else {                    
+                    ExpressionResult result = expManager.evaluate(operand);
+                    if (result.containsErrors()) {
+                        for(Errors error: result.getErrors()) {
+                            sourceLine.addError(error);                        
+                        }
+                    } else {                    
+                        if (label.isEmpty()) {
+                            sourceLine.addError(Errors.MISSING_EQUATE_LABEL);
+                        } else {
+                            symTable.add(label, result.getValue(), -1);
+                        }
+                    }
+                }
             } else {
                 sourceLine.addError(Errors.UNRECOGNIZED_MNEMONIC);
             }
@@ -392,6 +415,7 @@ public final class ListFile {
                 }
             } else if (menomonic.equals("RESW")) {
             } else if (menomonic.equals("RESB")) {
+            } else if (menomonic.equals("EQU")) {
             } else {
                 // Error undefined mneomonic. Error added in pass one.
             }

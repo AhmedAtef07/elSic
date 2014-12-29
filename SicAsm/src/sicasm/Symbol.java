@@ -19,6 +19,25 @@ public class Symbol {
         this.type = Type.RELATIVE;
     }
 
+    /**
+     *
+     * @param label
+     * @param addressLoction
+     * @param blockIndex block in which the label will be declared, setting the
+     * label type to absolute if index is less than 0.
+     */
+    public Symbol(String label, int addressLoction, int blockIndex) {
+        this.label = label;
+        this.addressLoction = addressLoction;
+        if (blockIndex < 0) {
+            this.blockIndex = -1;            
+            this.type = Type.ABSOLUTE;            
+        } else {
+            this.blockIndex = blockIndex;
+            this.type = Type.RELATIVE;            
+        }
+    }
+    
     public String getLabel() {
         return label;
     }

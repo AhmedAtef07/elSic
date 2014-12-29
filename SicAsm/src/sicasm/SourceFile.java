@@ -96,7 +96,7 @@ public final class SourceFile {
             }
             SourceLine AXX = new SourceLine(label, mnemonic, operand, comment);
             if (isExpression(operand))
-                AXX.setAsExpression();
+                AXX.setContainsExpression();
             if (unclosedQuote&&(literal || mnemonic.equalsIgnoreCase("byte")))
                 AXX.addError(Constants.Errors.UNCLOSED_QUOTE);
             file.add(AXX);

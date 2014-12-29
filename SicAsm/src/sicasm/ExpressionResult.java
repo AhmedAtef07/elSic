@@ -19,4 +19,8 @@ public class ExpressionResult {
     public int getValue() {
         return value;
     }    
+    
+    public boolean containsErrors() {
+        return errors != null;
+    }
 }

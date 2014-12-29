@@ -12,7 +12,7 @@ public class SourceLine {
                 errors;
     private boolean isLineComment,
                     isLiteral,
-                    isExpression;
+                    containsExpression;
     
     private static int labelMaxLength, 
                        mnemonicMaxLength, 
@@ -87,12 +87,12 @@ public class SourceLine {
         return isLiteral;
     }
 
-    public boolean isExpression() {
-        return isExpression;
+    public boolean containsExpression() {
+        return containsExpression;
     }
 
-    public void setAsExpression() {
-        isExpression = true;
+    public void setContainsExpression() {
+        containsExpression = true;
     }
     
     public void convertToLineComment() {
