@@ -10,25 +10,23 @@ public class ExpressionTerm {
     }
     
     public enum Sign {
-        POSTIVE,
+        POSITIVE,
         NEGATIVE,
     }
     
     private int value;
-    private Operator operator;
-    private String label;
-    
-    boolean isVariable;
-    
-    public ExpressionTerm(Operator operator, String label) {
+    private final Operator operator;
+    private final Sign sign;
+
+    public ExpressionTerm(Operator operator, Sign sign) {
         this.operator = operator;
-        this.label = label;
+        this.sign = sign;
     }
-    
-    public ExpressionTerm(int value) {
-        this.value = value;
+
+    public Sign getSign() {
+        return sign;
     }
-    
+
     public void setValue(int value) {
         this.value = value;
     }
@@ -39,10 +37,6 @@ public class ExpressionTerm {
 
     public Operator getOperator() {
         return operator;
-    }
-
-    public String getLabel() {
-        return label;
     }
     
 }

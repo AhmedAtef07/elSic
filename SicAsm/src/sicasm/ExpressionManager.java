@@ -3,24 +3,20 @@ package sicasm;
 import java.util.*;
 
 import sicasm.ExpressionTerm.Operator;
+import sicasm.ExpressionTerm.Sign;
+import sicasm.Symbol.Type;
 
 public class ExpressionManager {
-    
-    private String expression;
-    private boolean valid;
-    private int value;
-    private ArrayList<ExpressionTerm> terms;
 
-    private final ArrayList<Symbol> symbolTable;
-    
+    private final SymbolTable symbolTable;
     private static boolean instanceTaken = false;
 
-    private ExpressionManager(ArrayList<Symbol> symbolTable) {
+    private ExpressionManager(SymbolTable symbolTable) {
         this.symbolTable = symbolTable;
     }
-    
+
     public static ExpressionManager getExpressionManager(
-            ArrayList<Symbol> symbolTable) throws Exception {
+            SymbolTable symbolTable) throws Exception {
         if (instanceTaken) {
             throw new Exception(
                     "Only one instance can be taken from this class");
@@ -28,115 +24,244 @@ public class ExpressionManager {
         instanceTaken = true;
         return new ExpressionManager(symbolTable);
     }
-    
-    public ArrayList<ExpressionTerm> getTerms() {
-        return new ArrayList<ExpressionTerm> (terms);
-    }
-    
-    /**
-     * Return false only if there exists 2 consecutive operators.
-     */ 
-    private boolean validCheck() {
-        if(expression.isEmpty()) return false;
-        String[] terms = expression.split("[+,-,-,*,/]");
-        for (String term : terms) {
-            if (term.isEmpty()) {
-                return false;
-            }
-        }
-        return true;
-    }
-    
-    private boolean ready;
-    
+
     private boolean isInteger(String t) {
         try {
-            Integer.parseInt(t,16);
+            Integer.parseInt(t);
             return true;
-        }catch(Exception e) {
+        } catch (Exception e) {
             return false;
         }
     }
-    
-    private boolean isOperator(String x) {
-        return x.equals("+") || x.equals("-") || x.equals("-") || x.equals("*")
-               || x.equals("/");
-    }
-    
-    private int toNextOperator(int j, String[] operand) {
-        while( j < operand.length && !isOperator(operand[j]) ) j++;
-        return j;
-    }
-    
-    private void buildTerms() {
-        terms = new ArrayList<ExpressionTerm>();
-        Operator sign = ExpressionTerm.Operator.PLUS;
-        String[] component = expression.split("[+,-,-,*,/]");
-        String[] operator = expression.split("[^(+,-,-,*,/)]");
-        int j = toNextOperator(0, operator);
-        for(int i = 0 ; i < component.length ; i ++ ) {
-            if ( isInteger(component[i]) )
-                terms.add(new ExpressionTerm(sign, component[i]));
-            else {
-                terms.add(new ExpressionTerm(Integer.parseInt(component[i])));
-                ready = false;
-            }
-            if(i != component.length - 1) {
-                switch (operator[j]) {
-                    case "-":
-                        sign = ExpressionTerm.Operator.MINUS;
-                        break;
-                    case "+":
-                        sign = ExpressionTerm.Operator.PLUS;
-                        break;
-                    case "*":
-                        sign = ExpressionTerm.Operator.TIMES;
-                        break;
-                    case "/":
-                        sign = ExpressionTerm.Operator.DIVIDE;
+
+    private Symbol findSymbol(String label) {
+        try {
+            for (int i = 0; true; i++) {
+                if (symbolTable.get(i).getLabel().equals(label)) {
+                    return symbolTable.get(i);
                 }
             }
-            j = toNextOperator(j+1, operator);
+        } catch (Exception e) {
+            return null;
         }
     }
-    
-    public void setReady(boolean ready) {
-        this.ready = ready;
+
+    private boolean isOperator(char x) {
+        return x == '+' || x == '-' || x == '*' || x == '/';
     }
 
-    public boolean isReady() {
-        return ready;
+    private boolean isUnaryOperator(char x) {
+        return x == '+' || x == '-';
     }
-    
-    public boolean isValid() {
-        return valid;
+
+    private Operator getOperator(char x) {
+        switch (x) {
+            case '-':
+                return Operator.MINUS;
+            case '*':
+                return Operator.TIMES;
+            case '/':
+                return Operator.DIVIDE;
+            default:
+                return Operator.PLUS;
+        }
     }
-    
+
+    private final class OperatorAndSign {
+
+        private final ArrayList<Operator> op;
+        private final Operator operator;
+        private Sign sign;
+        private boolean validUnary = true;
+
+        public OperatorAndSign(ArrayList<Operator> op) {
+            this.op = op;
+            operator = op.get(0);
+            make();
+        }
+
+        public boolean isValidUnary() {
+            return validUnary;
+        }
+
+        public Operator getOperator() {
+            return operator;
+        }
+
+        public Sign getSign() {
+            return sign;
+        }
+
+        public void make() {
+            int negative = 0;
+            for (int i = 1; i < op.size(); i++) {
+                if (op.get(i) == Operator.DIVIDE
+                        || op.get(i) == Operator.TIMES) {
+                    validUnary = false;
+                } else if (op.get(i) == Operator.MINUS) {
+                    negative++;
+                }
+            }
+
+            if ((negative & 1) == 1) {
+                sign = Sign.NEGATIVE;
+            } else {
+                sign = Sign.POSITIVE;
+            }
+        }
+    }
+
     public ExpressionResult evaluate(String expression) {
-        Stack<Integer> term = new Stack<Integer>();
-        Stack<ExpressionTerm.Operator> op = new Stack<ExpressionTerm.Operator>();
+        ArrayList<Constants.Errors> errors = new ArrayList<>();
+        ArrayList<ExpressionTerm> expressionTerms = new ArrayList<>();
+        ArrayList<Operator> operators = new ArrayList<>();
+        boolean isValid = true;
+        if (isOperator(expression.charAt(expression.length() - 1))) {
+            errors.add(Constants.Errors.EXPRESSION_ILLEGAL_END);
+            isValid = false;
+        }
+        int i;
+        int countnegative = 0;
+        for (i = 0; isOperator(expression.charAt(i)); i++) {
+            if (!isUnaryOperator(expression.charAt(i))) {
+                errors.add(Constants.Errors.EXPRESSION_ILLEGAL_START);
+                isValid = false;
+            } else if (expression.charAt(i) == '-') {
+                countnegative++;
+            }
+        }
+        Operator sign;
+        Sign s;
+        if ((countnegative & 1) == 1) {
+            sign = Operator.MINUS;
+            s = Sign.NEGATIVE;
+        } else {
+            sign = Operator.PLUS;
+            s = Sign.POSITIVE;
+        }
+        operators.add(sign);
+        expressionTerms.add(new ExpressionTerm(sign, s));
+        StringBuilder term = new StringBuilder("");
+        int relativeTerms = 0;
+        boolean here = false;
+        while (i < expression.length()) {
+            if (isOperator(expression.charAt(i))) {
+                int value;
+                if (isInteger(term.toString())) {
+                    value = Integer.parseInt(term.toString());
+                    if (expressionTerms.get(i).getSign() == Sign.NEGATIVE) {
+                        value = -value;
+                    }
+                    expressionTerms.get(expressionTerms.size() - 1).
+                            setValue(value);
+                } else {
+                    String label = term.toString();
+                    Symbol sym = findSymbol(label);
+                    if (sym != null) {
+                        if (sym.getType() == Type.RELATIVE) {
+                            if (expressionTerms.get(expressionTerms.size() - 1)
+                                    .getOperator() == Operator.MINUS) {
+                                if (expressionTerms.get(
+                                        expressionTerms.size() - 1).getSign()
+                                        == Sign.NEGATIVE) {
+                                    relativeTerms++;
+                                } else {
+                                    relativeTerms--;
+                                }
+                            } else if (expressionTerms
+                                    .get(expressionTerms.size() - 1)
+                                    .getOperator() == Operator.PLUS) {
+                                if (expressionTerms.get(
+                                        expressionTerms.size() - 1).getSign()
+                                        == Sign.POSITIVE) {
+                                    relativeTerms++;
+                                } else {
+                                    relativeTerms--;
+                                }
+                            } else {
+                                errors.add(Constants.Errors
+                                        .EXPRESSION_INVALID_RELATIVE_OPERATOR);
+                                isValid = false;
+                            }
+                        }
+                        value = sym.getAddressLoction();
+                        if (expressionTerms.get(i).getSign() == Sign.NEGATIVE) {
+                            value = -value;
+                        }
+                        expressionTerms.get(expressionTerms.size() - 1).
+                                setValue(value);
+                    } else {
+                        errors.add(Constants.Errors.EXPRESSION_LABEL_UNDEFINED);
+                        isValid = false;
+                    }
+                }
+                term.delete(0, term.length());
+                operators.add(getOperator(expression.charAt(i)));
+                here = false;
+            } else {
+                if (!here) {
+                    OperatorAndSign opas = new OperatorAndSign(operators);
+                    expressionTerms.add(new ExpressionTerm(opas.getOperator(),
+                                                            opas.getSign()));
+                    if (!opas.isValidUnary()) {
+                        errors.add(
+                                Constants.Errors
+                                        .EXPRESSION_INVALID_UNARY_OPERATOR);
+                        isValid = false;
+                    }
+                    operators.clear();
+                    here = true;
+                }
+                term.append(i);
+            }
+            ++i;
+        }
+        if ((relativeTerms & 1) == 1) {
+            errors.add(Constants.Errors.EXPRESSION_ODD_RELATIVE_TERMS);
+            isValid = false;
+        }
+        if (!isValid) {
+            return new ExpressionResult(errors, 0);
+        }
+        return evaluate(expressionTerms);
+    }
+
+    private ExpressionResult evaluate(ArrayList<ExpressionTerm> terms) {
+        Stack<Integer> term = new Stack<>();
+        Stack<Operator> op = new Stack<>();
         term.push(terms.get(0).getValue());
-        for( int i = 1 ; i < terms.size() ; i ++) {
-            if ( terms.get(i).getOperator() == ExpressionTerm.Operator.TIMES 
-              || terms.get(i).getOperator() == ExpressionTerm.Operator.DIVIDE ) {
-              int x = terms.get(i).getValue();
-              int y = term.pop();
-              if( terms.get(i).getOperator() == ExpressionTerm.Operator.TIMES )
-                term.push(y*x);
-              else term.push(y/x);
+        for (int i = 1; i < terms.size(); i++) {
+            if (terms.get(i).getOperator() == ExpressionTerm.Operator.TIMES
+                    || terms.get(i).getOperator()
+                    == ExpressionTerm.Operator.DIVIDE) {
+                int x = terms.get(i).getValue();
+                int y = term.pop();
+                if (terms.get(i).getOperator() == 
+                        ExpressionTerm.Operator.TIMES) {
+                    term.push(y * x);
+                } else {
+                    if (x == 0) {
+                        ArrayList<Constants.Errors> errors = new ArrayList<>();
+                        errors.add(Constants.Errors.EXPRESSION_ZERO_DIVISION);
+                        return new ExpressionResult(errors, 0);
+                    }
+                    term.push(y / x);
+                }
             } else {
                 term.push(terms.get(i).getValue());
                 op.push(terms.get(i).getOperator());
             }
         }
-        while(!op.empty()) {
+        while (!op.empty()) {
             ExpressionTerm.Operator oper = op.pop();
             int x = term.pop();
             int y = term.pop();
-            if ( oper == ExpressionTerm.Operator.PLUS )
-                term.push(x+y);
-            else term.push(y-x);
+            if (oper == ExpressionTerm.Operator.PLUS) {
+                term.push(x + y);
+            } else {
+                term.push(y - x);
+            }
         }
-        return new ExpressionResult(null, value = term.pop());
+        return new ExpressionResult(null, term.pop());
     }
 }
