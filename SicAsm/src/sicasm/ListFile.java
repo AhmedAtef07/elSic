@@ -13,6 +13,11 @@ import java.util.Stack;
 import sicasm.Constants.Errors;
 
 public final class ListFile {
+    
+    // Memory constants in bytes.
+    private static int kMemorySize = 0x8000;
+    private static int kWordSize = 0x7FFFFF;
+    
     private final ArrayList<SourceLine> sourceLines;
     private int locationCounter,
                 startAddress,
@@ -179,7 +184,7 @@ public final class ListFile {
             firstUnCommentedLineFound = true;
             ++lineNumber;
             sourceLine.setAddressLocation(locationCounter);
-            if (locationCounter >= 0x8000) {
+            if (locationCounter >= kMemorySize) {
                 sourceLine.addError(Errors.ARITHMETIC_OVERFLOW);
             }
             String label = sourceLine.getLabel();
@@ -193,8 +198,8 @@ public final class ListFile {
                 } else if (symTable.containsLabel(label)) {
                     sourceLine.addError(Errors.DUPLICATE_LABEL);
                 } else {
-                    if (locationCounter >= 0x8000) {
-                        symTable.add(label, 0xFFFF);
+                    if (locationCounter >= kMemorySize) {
+                        symTable.add(label, kMemorySize + 1);
                     } else {
                         symTable.add(label, locationCounter);                        
                     }
@@ -228,7 +233,7 @@ public final class ListFile {
                     progName = label;                    
                 }
                 if (isHexInteger(operand)) {
-                    if(isInRange(operand, 16, 0x8000)) {
+                    if(isInRange(operand, 16, kMemorySize)) {
                         locationCounter = Integer.parseInt(operand, 16);
                         startAddress = locationCounter;
                     } else {
@@ -266,18 +271,17 @@ public final class ListFile {
                     multi = 1;
                 }
                 if (isValidReserveOperand(operand)) {
-                    if (isInRange(operand, 10, 0x8000)) {
+                    if (isInRange(operand, 10, kMemorySize)) {
                         int toBeReserved = Integer.parseInt(operand) * multi;
-                         if (toBeReserved + locationCounter < 0x8000) {
-                             locationCounter += toBeReserved;
-                         } else {
-                             sourceLine.addError(
-                                     Errors.INVALID_RESERVE_OPERAND);
-                             locationCounter = 0xFFFF;
-                         }
+                        if (toBeReserved + locationCounter < kMemorySize) {
+                            locationCounter += toBeReserved;
+                        } else {
+                            sourceLine.addError(Errors.INVALID_RESERVE_OPERAND);
+                            locationCounter = kMemorySize + 1;
+                        }
                     } else {
                         sourceLine.addError(Errors.INVALID_RESERVE_OPERAND);
-                        locationCounter = 0xFFFF;
+                        locationCounter = kMemorySize + 1;
                     }               
                 } else {
                     sourceLine.addError(Errors.INVALID_OPERAND);
@@ -293,15 +297,23 @@ public final class ListFile {
                     symTable.add(label, locationCounter, -1);
                 } else {                    
                     ExpressionResult result = expManager.evaluate(operand);
+                    int value = result.getValue();
                     if (result.containsErrors()) {
-                        for(Errors error: result.getErrors()) {
+                        for (Errors error: result.getErrors()) {
                             sourceLine.addError(error);                        
                         }
                     } else {                    
                         if (label.isEmpty()) {  
                             sourceLine.addError(Errors.MISSING_EQUATE_LABEL);
                         } else {
-                            symTable.add(label, result.getValue(), -1);
+                            if (value >= 0 && value < kMemorySize) {
+                                symTable.add(label, value, -1);
+    //                            System.out.println(result.getValue());
+                                sourceLine.setAddressLocation(value);
+                            } else {
+                                sourceLine.addError(
+                                        Errors.EQAUTE_RESULT_OUT_OF_RANGE);
+                            }
                         }
                     }
                 }
@@ -493,7 +505,7 @@ public final class ListFile {
                 return 0;
             }
         }        
-        if (!isInRange(operand, 10, 0x7FFFFF)) {
+        if (!isInRange(operand, 10, kWordSize)) {
             return 1;
         }
         return 7;

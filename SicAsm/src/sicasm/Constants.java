@@ -105,6 +105,8 @@ public final class Constants {
         // Operand errors.
         ARITHMETIC_OVERFLOW (Target.OPERAND, 
             "Location counter exceeded memory size (2^15)"),
+        EQAUTE_RESULT_OUT_OF_RANGE (Target.OPERAND, 
+            "Equate result is out of range (0 <= result < memory size (2^15))"),
         INVALID_ADDRESS_LOCATION (Target.OPERAND, 
             "Address location out of range (must be less than 0xFFFF)"),
         INVALID_BYTE_OPERAND (Target.OPERAND,
