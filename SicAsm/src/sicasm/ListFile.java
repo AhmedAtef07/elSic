@@ -12,11 +12,11 @@ import java.util.Stack;
 
 import sicasm.Constants.Errors;
 
-public final class ListFile {
+public final class ListFile {   
     
-    // Memory constants in bytes.
-    private static int kMemorySize = 0x8000;
-    private static int kWordSize = 0x7FFFFF;
+    // Cloned from Constants.
+    public static final int kMemorySize = Constants.kMemorySize;
+    public static final int kWordSize = Constants.kWordSize;
     
     private final ArrayList<SourceLine> sourceLines;
     private int locationCounter,
@@ -171,7 +171,7 @@ public final class ListFile {
                 firstUnCommentedLineFound = false, 
                 endFound = false;
         
-        for(int i = 0; i < sourceLines.size(); ++i) {
+        for (int i = 0; i < sourceLines.size(); ++i) {
             SourceLine sourceLine = sourceLines.get(i);
             if (!firstUnCommentedLineFound) ++firstCodeLine;
             if (sourceLine.isLineComment()) {
@@ -233,7 +233,7 @@ public final class ListFile {
                     progName = label;                    
                 }
                 if (isHexInteger(operand)) {
-                    if(isInRange(operand, 16, kMemorySize)) {
+                    if (isInRange(operand, 16, kMemorySize)) {
                         locationCounter = Integer.parseInt(operand, 16);
                         startAddress = locationCounter;
                     } else {
@@ -246,7 +246,7 @@ public final class ListFile {
             } else if (menomonic.equals("END")) {
                 endFound = true;
                 ArrayList<SourceLine> addedLiterals = getUnLocatedLiterals();
-                for(SourceLine literalSourceLine: addedLiterals) {
+                for (SourceLine literalSourceLine: addedLiterals) {
                     sourceLines.add(i, literalSourceLine);
                     i++;
                 }
@@ -288,7 +288,7 @@ public final class ListFile {
                 }
             } else if (menomonic.equals("LTORG")) {
                 ArrayList<SourceLine> addedLiterals = getUnLocatedLiterals();
-                for(SourceLine literalSourceLine: addedLiterals) {
+                for (SourceLine literalSourceLine: addedLiterals) {
                     i++;
                     sourceLines.add(i, literalSourceLine);
                 }
@@ -306,10 +306,12 @@ public final class ListFile {
                         if (label.isEmpty()) {  
                             sourceLine.addError(Errors.MISSING_EQUATE_LABEL);
                         } else {
-                            if (value >= 0 && value < kMemorySize) {
+                            if (value >= -kMemorySize / 2 && 
+                                    value < kMemorySize / 2) {
                                 symTable.add(label, value, -1);
     //                            System.out.println(result.getValue());
-                                sourceLine.setAddressLocation(value);
+//                                sourceLine.setAddressLocation(value);
+                                 sourceLine.setAddressLocation(-kMemorySize / 2);
                             } else {
                                 sourceLine.addError(
                                         Errors.EQAUTE_RESULT_OUT_OF_RANGE);
@@ -346,9 +348,9 @@ public final class ListFile {
         }
         
         if (!endFound) {
-            // Adding un located literals.
+            // Adding unlocated literals.
             ArrayList<SourceLine> addedLiterals = getUnLocatedLiterals();
-            for(SourceLine literalSourceLine: addedLiterals) {
+            for (SourceLine literalSourceLine: addedLiterals) {
                 sourceLines.add(literalSourceLine);
             }
 
@@ -459,12 +461,12 @@ public final class ListFile {
 
     private boolean isValidLabelRepresentation(String label) {
         label = label.toUpperCase();
-        if(!((label.charAt(0) >= 'A' && label.charAt(0) <= 'Z') || 
+        if (!((label.charAt(0) >= 'A' && label.charAt(0) <= 'Z') || 
              label.charAt(0) == '_')) {
             return false;
         }
-        for(int i = 1; i < label.length(); ++i) {
-            if(!((label.charAt(i) >= 'A' && label.charAt(i) <= 'Z') || 
+        for (int i = 1; i < label.length(); ++i) {
+            if (!((label.charAt(i) >= 'A' && label.charAt(i) <= 'Z') || 
                  (label.charAt(i) >= '0' && label.charAt(i) <= '9') || 
                   label.charAt(0) == '_')) {
                 return false;

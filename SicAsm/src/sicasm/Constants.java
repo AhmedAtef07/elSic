@@ -3,7 +3,11 @@ package sicasm;
 import java.util.*;
 
 public final class Constants {
-
+    
+    // Memory constants in bytes.
+    public static final int kMemorySize = 0x8000;
+    public static final int kWordSize = 0x7FFFFF;
+    
     public static final TreeMap<String, Integer> OpTable = new TreeMap<>();
 
     static {        
@@ -106,7 +110,7 @@ public final class Constants {
         ARITHMETIC_OVERFLOW (Target.OPERAND, 
             "Location counter exceeded memory size (2^15)"),
         EQAUTE_RESULT_OUT_OF_RANGE (Target.OPERAND, 
-            "Equate result is out of range (0 <= result < memory size (2^15))"),
+            "Equate result is out of range (-2^14 <= result < 2^14)"),
         INVALID_ADDRESS_LOCATION (Target.OPERAND, 
             "Address location out of range (must be less than 0xFFFF)"),
         INVALID_BYTE_OPERAND (Target.OPERAND,

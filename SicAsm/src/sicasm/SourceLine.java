@@ -167,8 +167,10 @@ public class SourceLine {
         }
      
         String locationAddress;
-        if (addressLocation < 0x8000) {
+        if (addressLocation < Constants.kMemorySize) {
             locationAddress = String.format("%04X", addressLocation);
+            locationAddress = locationAddress.substring(
+                    Math.max(0, locationAddress.length() - 4));
         } else {
             locationAddress = Constants.getRandomSymbols();
         }
