@@ -27,12 +27,11 @@ public class ExpressionManager {
     }
 
     private boolean isInteger(String t) {
-        try {
-            Integer.parseInt(t);
-            return true;
-        } catch (Exception e) {
-            return false;
+        for(int i = 0 ; i < t.length() ; i ++) {
+            if (!( t.charAt(i) >= '0' && t.charAt(i) <= '9'))
+                return false;
         }
+        return true;
     }
 
     private Symbol findSymbol(String label) {
@@ -112,6 +111,12 @@ public class ExpressionManager {
         }
     }
     
+    private boolean isOverflow(String t, boolean negative) {
+        if ( t.length() > 7 ) return true;
+        if (negative) return !(Integer.parseInt(t) <= Constants.kMemorySize+1);
+        return !(Integer.parseInt(t) <= Constants.kMemorySize);
+    }
+    
     private boolean org = false;
     public ExpressionResult evaluate(String expression) {
         ArrayList<Errors> errors = new ArrayList<>();
@@ -154,14 +159,22 @@ public class ExpressionManager {
                 int value;
                 if (!herop) {
                     if (isInteger(term.toString())) {
-                        value = Integer.parseInt(term.toString());
-                        if (expressionTerms.get(expressionTerms.size() - 1)
-                                .getSign()
-                                == Sign.NEGATIVE) {
-                            value = -value;
+                        // overflow check
+                        if ( isOverflow(term.toString(), 
+                                expressionTerms.get(expressionTerms.size()-1)
+                                        .getSign() == Sign.NEGATIVE)) {
+                            errors.add(Errors.EXPRESSION_OVER_FLOW);
+                            isValid = false;
+                        } else {
+                            value = Integer.parseInt(term.toString());
+                            if (expressionTerms.get(expressionTerms.size() - 1)
+                                    .getSign()
+                                    == Sign.NEGATIVE) {
+                                value = -value;
+                            }
+                                expressionTerms.get(expressionTerms.size() - 1).
+                                        setValue(value);
                         }
-                        expressionTerms.get(expressionTerms.size() - 1).
-                                setValue(value);
 //                        System.out.println("el term : " + term.toString());
                         //System.out.println("hereasfasfas");
                     } else {
@@ -242,14 +255,23 @@ public class ExpressionManager {
             int value;
             if (!herop) {
                 if (isInteger(term.toString())) {
-                    value = Integer.parseInt(term.toString());
-                    if (expressionTerms.get(expressionTerms.size() - 1)
-                            .getSign()
-                            == Sign.NEGATIVE) {
-                        value = -value;
-                    }
-                    expressionTerms.get(expressionTerms.size() - 1).
-                            setValue(value);
+                    // overflow check
+                    if ( isOverflow(term.toString(), 
+                                expressionTerms.get(expressionTerms.size()-1)
+                                        .getSign() == Sign.NEGATIVE)) {
+                            errors.add(Errors.EXPRESSION_OVER_FLOW);
+                            System.out.println("here");
+                            isValid = false;
+                        } else {
+                            value = Integer.parseInt(term.toString());
+                            if (expressionTerms.get(expressionTerms.size() - 1)
+                                    .getSign()
+                                    == Sign.NEGATIVE) {
+                                value = -value;
+                            }
+                                expressionTerms.get(expressionTerms.size() - 1).
+                                        setValue(value);
+                        }
 //                    System.out.println("el term : " + term.toString());
                     //System.out.println("hereasfasfas");
                 } else {
@@ -307,8 +329,8 @@ public class ExpressionManager {
             errors.add(Constants.Errors.EXPRESSION_ODD_RELATIVE_TERMS);
             isValid = false;
         }
-//        System.out.println("\n Relativ : " + relativeTerms + "\n");
-        //debugg
+        System.out.println("\n Relativ : " + relativeTerms + "\n");
+//        //debugg
 //        for (ExpressionTerm expressionTerm : expressionTerms) {
 //            System.out.println("Operator : " + expressionTerm.getOperator());
 //            System.out.println("Sign : " + expressionTerm.getSign());
@@ -329,6 +351,7 @@ public class ExpressionManager {
     private ExpressionResult evaluate(ArrayList<ExpressionTerm> terms) {
         Stack<Integer> term = new Stack<>();
         Stack<Operator> op = new Stack<>();
+        ArrayList<Constants.Errors> errors = new ArrayList<>();
         term.push(terms.get(0).getValue());
         for (int i = 1; i < terms.size(); i++) {
             if (terms.get(i).getOperator() == ExpressionTerm.Operator.TIMES
@@ -339,10 +362,14 @@ public class ExpressionManager {
                 if (terms.get(i).getOperator()
                         == ExpressionTerm.Operator.TIMES) {
                     term.push(y * x);
+                    if ( isOverflow(Integer.toString(Math.abs(term.peek())), 
+                            term.peek() < 0) ) {
+                        errors.add(Errors.EXPRESSION_OVER_FLOW);
+                        return new ExpressionResult(errors, 0);
+                    }
                 } else {
                     if (x == 0) {
-                        ArrayList<Constants.Errors> errors = new ArrayList<>();
-                        errors.add(Constants.Errors.EXPRESSION_ZERO_DIVISION);
+                        errors.add(Errors.EXPRESSION_ZERO_DIVISION);
                         return new ExpressionResult(errors, 0);
                     }
                     term.push(y / x);
@@ -358,6 +385,11 @@ public class ExpressionManager {
             int y = term.pop();
             if (oper == ExpressionTerm.Operator.PLUS) {
                 term.push(x + y);
+                if ( isOverflow(Integer.toString(Math.abs(term.peek())), 
+                            term.peek() < 0) ) {
+                        errors.add(Errors.EXPRESSION_OVER_FLOW);
+                        return new ExpressionResult(errors, 0);
+                }
             } else {
                 term.push(y - x);
             }
