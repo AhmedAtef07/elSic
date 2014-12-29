@@ -8,6 +8,7 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Stack;
 
 import sicasm.Constants.Errors;
 
@@ -18,6 +19,7 @@ public final class ListFile {
                 programLength;
     private SymbolTable symTable;
     private ArrayList<Literal> literalTable;
+    private Stack<Integer> originLocations;
     private Boolean errorsExist;
     private final String fileDir;
     
@@ -36,6 +38,7 @@ public final class ListFile {
         symTable = new SymbolTable();
         literalTable = new ArrayList<>();
         errorsExist = false;
+        originLocations = new Stack<>();
         expManager = ExpressionManager.getExpressionManager(symTable);
         
         passOne();
@@ -210,8 +213,9 @@ public final class ListFile {
                 // Menomonic 'RSUB' does not need operand. So this should be 
                 // checked before checking if there is an oprand or not.
                 locationCounter += 3;
-            } else if (operand.isEmpty() && !menomonic.equals("LTORG") 
-                    && !menomonic.equals("END")) {
+            } else if (operand.isEmpty() && !menomonic.equals("LTORG") && 
+                    !menomonic.equals("ORG") && !menomonic.equals("END")) {
+                // Directives which do not need oprand.
                 // Add error after more checks in pass two.
             } else if (menomonic.equals("START")) {
                 if (lineNumber != 0) {
@@ -280,14 +284,11 @@ public final class ListFile {
                 }
             } else if (menomonic.equals("LTORG")) {
                 ArrayList<SourceLine> addedLiterals = getUnLocatedLiterals();
-                System.out.println(addedLiterals.size());
                 for(SourceLine literalSourceLine: addedLiterals) {
                     i++;
                     sourceLines.add(i, literalSourceLine);
                 }
-            } else if (menomonic.equals("EQU")) {   
-                // TODO(ahmedatef): set prograrm block index to -1 when adding
-                // program blocks.
+            } else if (menomonic.equals("EQU")) {
                 if (operand.equals("*")) {
                     symTable.add(label, locationCounter, -1);
                 } else {                    
@@ -297,11 +298,28 @@ public final class ListFile {
                             sourceLine.addError(error);                        
                         }
                     } else {                    
-                        if (label.isEmpty()) {
+                        if (label.isEmpty()) {  
                             sourceLine.addError(Errors.MISSING_EQUATE_LABEL);
                         } else {
                             symTable.add(label, result.getValue(), -1);
                         }
+                    }
+                }
+            } else if (menomonic.equals("ORG")) {
+                // TODO(ahmedatef): empty operand case will never happen in case
+                // source line contains a comment.
+                if (operand.isEmpty()) {
+                    if (originLocations.isEmpty()) {
+                        sourceLine.addError(Errors.EMPTY_ORIGIN_STACK);
+                    } else {
+                        locationCounter = originLocations.pop();                        
+                    }
+                } else {
+                    if (symTable.containsLabel(operand)) {
+                        originLocations.push(locationCounter);
+                        locationCounter = symTable.getAddressLocation(operand);
+                    } else {
+                        sourceLine.addError(Errors.UNDEFINED_LABEL);
                     }
                 }
             } else {
@@ -339,8 +357,10 @@ public final class ListFile {
             String menomonic = sourceLine.getMnemonic().toUpperCase();
             String operand = sourceLine.getOperand();
             
+            // Directives which do not need oprand are added as special cases.
             if (operand.isEmpty() && !menomonic.equals("RSUB") && 
-                    !menomonic.equals("LTORG") && !menomonic.equals("END")) {
+                    !menomonic.equals("LTORG") && !menomonic.equals("END") && 
+                    !menomonic.equals("ORG")) {
                 sourceLine.addError(Errors.MISSING_OPERAND);
             }
             // Handeling Mnemonics and directives.

@@ -87,6 +87,9 @@ public final class Constants {
             "Can not find the mnemonic") ,
         MISSING_OPERAND (Target.LINE, 
             "Can not find the operand"),
+        EMPTY_ORIGIN_STACK (Target.LINE, 
+            "Can not find previously used origin location "
+                    + "(ORG stack is empty)"),
         
         // Label errors.
         INVALID_LABEL_REPRESENTATION (Target.LABEL, 
