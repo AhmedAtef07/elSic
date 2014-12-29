@@ -53,18 +53,19 @@ public class SicAsm extends JPanel {
         javax.swing.SwingUtilities.invokeLater(new Runnable() {
             public void run() {
                 try {
-                        for (UIManager.LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) {
-                            if ("Nimbus".equals(info.getName())) {
-                                UIManager.setLookAndFeel(info.getClassName());
-                                break;
-                            }
+                    for (UIManager.LookAndFeelInfo info : 
+                            UIManager.getInstalledLookAndFeels()) {
+                        if ("Nimbus".equals(info.getName())) {
+                            UIManager.setLookAndFeel(info.getClassName());
+                            break;
                         }
-                    } catch (Exception e) {
-                        //JOptionPane m = new JOptionPane();
-                        
-                        System.out.println("Something went wrong loading Nimbus");
-                        
                     }
+                } catch (Exception e) {
+                    //JOptionPane m = new JOptionPane();
+
+                    System.out.println("Something went wrong loading Nimbus");
+
+                }
                 new GUI();
             }
         });     

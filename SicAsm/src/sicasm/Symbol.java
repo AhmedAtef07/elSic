@@ -12,11 +12,11 @@ public class Symbol {
     private final int blockIndex;
     private final Type type;
 
-    public Symbol(String label, int addressLoction, int blockIndex, Type type) {
+    public Symbol(String label, int addressLoction) {
         this.label = label;
         this.addressLoction = addressLoction;
-        this.blockIndex = blockIndex;
-        this.type = type;
+        this.blockIndex = 0;
+        this.type = Type.RELATIVE;
     }
 
     public String getLabel() {

@@ -8,7 +8,6 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.TreeMap;
 
 import sicasm.Constants.Errors;
 
@@ -17,11 +16,11 @@ public final class ListFile {
     private int locationCounter,
                 startAddress,
                 programLength;
-    private TreeMap<String, Integer> symTable;
+    private SymbolTable symTable;
     private ArrayList<Literal> literalTable;
     private Boolean errorsExist;
     private final String fileDir;
-            
+    
     public ListFile(String sourceFileName, Boolean gerenateListFile) 
             throws Exception {
         SourceLine.resetMaxLength();
@@ -31,7 +30,8 @@ public final class ListFile {
         if (sourceLines.isEmpty()) {
             throw new Exception("File is empty!");
         }
-        symTable = new TreeMap<>();
+        
+        symTable = new SymbolTable();
         literalTable = new ArrayList<>();
         errorsExist = false;
         passOne();
@@ -106,7 +106,7 @@ public final class ListFile {
         return -1;
     }
     
-    private int getLiteralLocationAddress(String operand) {
+    private int getLiteralAddressLocation(String operand) {
         for (Literal literal: literalTable) {
             if (literal.getName().equals(operand)) {
                 return literal.getAddressLocation();
@@ -183,13 +183,13 @@ public final class ListFile {
             if (!label.isEmpty()) {
                 if (!isValidLabelRepresentation(label)) {
                     sourceLine.addError(Errors.INVALID_LABEL_REPRESENTATION);
-                } else if (symTable.containsKey(label)) {
+                } else if (symTable.containsLabel(label)) {
                     sourceLine.addError(Errors.DUPLICATE_LABEL);
                 } else {
                     if (locationCounter >= 0x8000) {
-                        symTable.put(label, 0xFFFF);
+                        symTable.add(label, 0xFFFF);
                     } else {
-                        symTable.put(label, locationCounter);                        
+                        symTable.add(label, locationCounter);                        
                     }
                 }
             }
@@ -332,13 +332,14 @@ public final class ListFile {
                         indexed = true;
                         operand = operand.substring(0, operand.length() - 2);
                     }
-                    if (symTable.containsKey(operand)) {
-                        int operandAddress = symTable.get(operand);
+                    if (symTable.containsLabel(operand)) {
+                        int operandAddress = symTable.getAddressLocation(
+                                operand);
                         if (indexed) operandAddress |= 1 << 15; 
                         hexCode |= operandAddress;                        
                         objectCode = String.format("%06X", hexCode);
                     } else if (isLiteral(operand)) {                       
-                        int operandAddress = getLiteralLocationAddress(operand);
+                        int operandAddress = getLiteralAddressLocation(operand);
                         if (indexed) operandAddress |= 1 << 15; 
                         hexCode |= operandAddress;                        
                         objectCode = String.format("%06X", hexCode);
