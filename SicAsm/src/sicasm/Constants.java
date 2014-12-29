@@ -124,6 +124,9 @@ public final class Constants {
                     + "\"=x'A793D'\" or (string)\"=c'Ahmed Atef'\""),
         INVALID_OPERAND (Target.OPERAND,
             "Invalid operand"),
+        INVALID_ORIGIN_OPERAND (Target.OPERAND, 
+            ("Invalid origin operand (operand lead to arthimatic overflow, "
+                    + "0 <= operand < 2^15)")),
         INVALID_RESERVE_OPERAND (Target.OPERAND, 
             ("Invalid reserve operand (operand lead to arthimatic overflow)")),
         INVALID_START_ADDRESS (Target.OPERAND, 
@@ -153,7 +156,9 @@ public final class Constants {
             "Division by zero detected in expression"),
         EXPRESSION_INVALID_UNARY_OPERATOR (Target.OPERAND, 
             "Invalid unary operator in expression "
-                    + "(+ or - can not be followed by * or /)");
+                    + "(+ or - can not be followed by * or /)"),
+        EXPRESSION_OVER_FLOW (Target.OPERAND, 
+            "Expression evaluation lead to overflow (-2^23 <= value < 2^23)");
         
         private final Target target;
         private final String message;
