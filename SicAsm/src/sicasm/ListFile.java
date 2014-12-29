@@ -309,9 +309,7 @@ public final class ListFile {
                             if (value >= -kMemorySize / 2 && 
                                     value < kMemorySize / 2) {
                                 symTable.add(label, value, -1);
-    //                            System.out.println(result.getValue());
-//                                sourceLine.setAddressLocation(value);
-                                 sourceLine.setAddressLocation(-kMemorySize / 2);
+                                sourceLine.setAddressLocation(value);
                             } else {
                                 sourceLine.addError(
                                         Errors.EQAUTE_RESULT_OUT_OF_RANGE);
@@ -329,11 +327,30 @@ public final class ListFile {
                         locationCounter = originLocations.pop();                        
                     }
                 } else {
-                    if (symTable.containsLabel(operand)) {
+                    ExpressionResult result = expManager.evaluateIgnoreType(
+                            operand);
+                    if (sourceLine.containsExpression()) {
+                        if (result.containsErrors()) {
+                            for (Errors error: result.getErrors()) {
+                                sourceLine.addError(error);
+                            }
+                        } else {
+                            originLocations.push(locationCounter);
+                            locationCounter = result.getValue();
+                        }                        
+                    } else if (!result.containsErrors()) {
+                        originLocations.push(locationCounter);
+                        locationCounter = result.getValue();
+                    } else if (symTable.containsLabel(operand)) {
                         originLocations.push(locationCounter);
                         locationCounter = symTable.getAddressLocation(operand);
                     } else {
                         sourceLine.addError(Errors.UNDEFINED_LABEL);
+                    }
+                    
+                    if (locationCounter < 0 || locationCounter >= kMemorySize) {
+                        locationCounter = kMemorySize + 1;
+                        sourceLine.addError(Errors.INVALID_ORIGIN_OPERAND);
                     }
                 }
             } else {
