@@ -111,7 +111,8 @@ public class ExpressionManager {
             }
         }
     }
-
+    
+    private boolean org = false;
     public ExpressionResult evaluate(String expression) {
         ArrayList<Errors> errors = new ArrayList<>();
         ArrayList<ExpressionTerm> expressionTerms = new ArrayList<>();
@@ -302,7 +303,7 @@ public class ExpressionManager {
             //operators.add(getOperator(expression.charAt(i)));
             here = false;
         }
-        if (relativeTerms != 0) {
+        if (relativeTerms != 0 && !org) {
             errors.add(Constants.Errors.EXPRESSION_ODD_RELATIVE_TERMS);
             isValid = false;
         }
@@ -318,6 +319,11 @@ public class ExpressionManager {
             return new ExpressionResult(errors, 0);
         }
         return evaluate(expressionTerms);
+    }
+    
+    public ExpressionResult evaluateIgnoreType(String expression) {
+        org = true;
+        return evaluate(expression);
     }
 
     private ExpressionResult evaluate(ArrayList<ExpressionTerm> terms) {
