@@ -8,8 +8,8 @@ public class SourceLine {
                    operand, 
                    comment,
                    objectCode;
-    private int addressLocation,
-                errors;
+    private int addressLocation;
+    private long errors;
     private boolean isLineComment,
                     isLiteral,
                     containsExpression;
@@ -111,7 +111,7 @@ public class SourceLine {
     }
     
     public void addError(Constants.Errors error) {
-        errors |= 1 << error.ordinal();
+        errors |= 1L << error.ordinal();
     }
     
     private ArrayList<Constants.Errors> getErrorsList() {
@@ -119,8 +119,8 @@ public class SourceLine {
             return null;
         }
         ArrayList<Constants.Errors> errorMessages = new ArrayList<>();
-        for (int i = 0; i < 30; i++) {
-            if ((errors & (1 << i)) != 0) {
+        for (int i = 0; i < 63; i++) {
+            if ((errors & (1L << i)) != 0) {
                 errorMessages.add(Constants.Errors.values()[i]);  
             }
         }
