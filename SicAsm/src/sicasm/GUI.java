@@ -62,7 +62,7 @@ public class GUI extends JFrame {
         JButton Help = new JButton("Help");
         String helping  = "Ctrl S -> Save\nCtrl O ->Open\nCtrl Shift S -> Save as\n"
                 + "Ctrl L -> Listfile\nCtrl J -> ObjFile\nCtrl R -> Run\n"
-                + "Ctrl F -> Find";
+                + "Ctrl F -> Find\nCtrl Z -> Undo\nCtrl Shift Z -> Redo";
 	JTextArea input = new JTextArea(30,70);
 	JScrollPane scroll ;
 	JFileChooser chooser = new JFileChooser();
@@ -122,6 +122,8 @@ public class GUI extends JFrame {
                          else if((e.getKeyCode() == KeyEvent.VK_O) && 
                                  ((e.getModifiers() & KeyEvent.CTRL_MASK) != 0)){
                              Loading();
+                             LastAction= input.getText();
+                             makeAction();
                          }
                          else if((e.getKeyCode() == KeyEvent.VK_L) && 
                                  ((e.getModifiers() & KeyEvent.CTRL_MASK) != 0)){
@@ -137,6 +139,8 @@ public class GUI extends JFrame {
                          }
                          else if((e.getKeyCode() == KeyEvent.VK_C) && 
                                  ((e.getModifiers() & KeyEvent.CTRL_MASK) != 0)){
+                             LastAction = input.getText();
+                             makeAction();
                              clearing();
                          }
                          else if((e.getKeyCode() == KeyEvent.VK_R) && 
@@ -151,14 +155,16 @@ public class GUI extends JFrame {
                                  (e.getKeyCode() == KeyEvent.VK_BACK_SPACE) ||
                                  (e.getKeyCode() == KeyEvent.VK_ENTER) ||
                                  e.getKeyCode() == KeyEvent.VK_SPACE){
+                             LastAction=input.getText();
                              if(SpaceChecker == false)makeAction();
                              SpaceChecker= true ;
                          }
-                         else if((e.getKeyCode() == KeyEvent.VK_Z) && e.isControlDown()){
-                             undoAction();
-                         }
                          else if((e.getKeyCode() == KeyEvent.VK_Z) && e.isControlDown() && e.isShiftDown()){
                              redoAction();
+                             System.out.println("Redo");
+                         }
+                         else if((e.getKeyCode() == KeyEvent.VK_Z) && e.isControlDown()){
+                             undoAction();
                          }
                          else {
                              LastAction = input.getText();
@@ -173,7 +179,8 @@ public class GUI extends JFrame {
                        
                     }
                 } 
-                );              
+                );
+                
                 this.addMouseListener(MouseList);
                 input.requestFocus();
                 input.addMouseListener(MouseList);
@@ -181,7 +188,7 @@ public class GUI extends JFrame {
 			 
             public void actionPerformed(ActionEvent e)
             {
-                  list();
+                  lis();
             }
         }); 
 		ObjFile.addActionListener(new ActionListener() {
@@ -202,6 +209,8 @@ public class GUI extends JFrame {
 			 
             public void actionPerformed(ActionEvent e)
             {
+                LastAction = input.getText();
+                makeAction();
                 clearing();
             }
         });  
@@ -224,6 +233,8 @@ public class GUI extends JFrame {
             public void actionPerformed(ActionEvent e)
             {
                Loading();
+               LastAction = input.getText();
+                makeAction();
             }
         }); 
                 Help.addActionListener(new ActionListener() {
@@ -235,6 +246,7 @@ public class GUI extends JFrame {
                 });
 		//p.add(input);
                 this.helperBoolean = true ;
+                this.addKeyListener(keys);
                 //p.add( Box.createVerticalStrut(400) );
 		//p.add(scroll);
 		west.setLayout(new GridLayout(8,1));
@@ -264,13 +276,17 @@ public class GUI extends JFrame {
                 //frame.setVisible(true);
 	}
 	private void makeAction(){
+            
             undoStack.push(LastAction);
         }
         private void undoAction(){
+            if(undoStack.empty() != true){
             redoStack.push(input.getText());
-            input.setText(undoStack.pop());
+            input.setText(undoStack.pop());}
+            else status.setText("No undo available");
         }
         private void redoAction(){
+            if(redoStack.empty() != true)
             input.setText(redoStack.pop());
         }
         private void Find(){
@@ -377,14 +393,25 @@ public class GUI extends JFrame {
         private void lis(){
             if(RunningAbsolutePath != null){
              Runtime rt=Runtime.getRuntime();
-
+              StringBuilder lisPath = new StringBuilder("");
         //String file="E:\\Studies\\ProgII\\Lab\\Notepad\\LISFILE.txt";
-
+              boolean appeared = false;
+             for(int i=RunningAbsolutePath.length()-1;i>=0 ;i--){
+                 
+                 if(appeared == true)lisPath.append(absolutePath.charAt(i));
+                 
+                 if(RunningAbsolutePath.charAt(i)==('\\'))
+                     appeared = true ;
+             }
+             lisPath.reverse();
+                lisPath.append("\\LISTFILE");
+                
                 try {
-                    Process p=rt.exec("notepad "+ absolutePath); 
+                    
+                    Process p=rt.exec("notepad "+ lisPath.toString()); 
                     // a space is required after notepad
                 } catch (IOException ex) {
-                   status.setText("Can't be opened ");
+                   status.setText(lisPath.toString());
                 }
             }
             else  status.setText("Nothing to be opened");
@@ -407,16 +434,29 @@ public class GUI extends JFrame {
         }
         
         private void obj(){
-            if(RunningAbsolutePath != null){
+               if(RunningAbsolutePath != null){
              Runtime rt=Runtime.getRuntime();
+              StringBuilder lisPath = new StringBuilder("");
+        //String file="E:\\Studies\\ProgII\\Lab\\Notepad\\LISFILE.txt";
+              boolean appeared = false;
+             for(int i=RunningAbsolutePath.length()-1;i>=0 ;i--){
+                 
+                 if(appeared == true)lisPath.append(absolutePath.charAt(i));
+                 
+                 if(RunningAbsolutePath.charAt(i)==('\\'))
+                     appeared = true ;
+             }
+             lisPath.reverse();
+             lisPath.append("\\OBJFILE");
                 try {
-                    Process p=rt.exec("notepad "+ absolutePath); 
-                    status.setText("Opened");
+                    
+                    Process p=rt.exec("notepad "+ lisPath.toString()); 
+                    // a space is required after notepad
                 } catch (IOException ex) {
-                   status.setText("Can't be opened");
+                   status.setText("Can't be opened ");
                 }
             }
-            else status.setText("Nothing Has been runned");
+            
         }
         
         
@@ -443,6 +483,7 @@ public class GUI extends JFrame {
             }
         }
         
+        @SuppressWarnings("empty-statement")
         private void HighLight(JTextComponent MyArea,String Finder,boolean unfinder){
             if(findControl == false && unfinder == false){
                 try{
@@ -450,15 +491,26 @@ public class GUI extends JFrame {
                     Document doc = MyArea.getDocument();
                     String Text = doc.getText(0,doc.getLength());
                     int position= 0;
+                    int i;
+                    int j;
                     while((position=Text.toUpperCase().indexOf(Finder.toUpperCase(),position))>=0){
-                        Lite.addHighlight(position, position+Finder.length(), mySelector);
+                        for( i=position; i < Text.length() && Text.toUpperCase().charAt(i)>='A' && Text.toUpperCase().charAt(i)<='Z' ;i++){
+                            
+                        }
+                        for( j=position; j >=0 && Text.toUpperCase().charAt(j)>='A' && Text.toUpperCase().charAt(j)<='Z' ;j--){
+                            
+                        }
+                        if(j>=0)Lite.addHighlight(j, i, mySelector);
+                        else Lite.addHighlight(0, i, mySelector);
                         position += Finder.length();
                     }
                     findControl = true ;
                     delay = true;
                 }
                 catch(Exception e){
+                    
                     status.setText("Something went wrong with the finder");
+                    status.setText(e.getMessage());
                 }
             }
             else if(findControl == true && delay == true)
@@ -516,5 +568,88 @@ public class GUI extends JFrame {
                 if(findControl == true || Finder!=null)
                     unFind();
             }
+        };
+        KeyListener keys = new KeyListener(){
+
+            @Override
+            public void keyTyped(KeyEvent e) {
+                //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+            }
+
+            @Override
+            public void keyPressed(KeyEvent e) {
+                //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+                requestFocusInWindow();
+                if((e.getKeyCode() == KeyEvent.VK_S)  &&  
+                                 e.isControlDown() && e.isShiftDown() ){
+                             Saving();
+                             
+                         }
+                         else if ((e.getKeyCode() == KeyEvent.VK_S) && 
+                                 ((e.getModifiers() & KeyEvent.CTRL_MASK) != 0)){
+                             Save();
+                         }
+                         else if((e.getKeyCode() == KeyEvent.VK_O) && 
+                                 ((e.getModifiers() & KeyEvent.CTRL_MASK) != 0)){
+                             Loading();
+                             LastAction = input.getText();
+                             makeAction();
+                         }
+                         else if((e.getKeyCode() == KeyEvent.VK_L) && 
+                                 ((e.getModifiers() & KeyEvent.CTRL_MASK) != 0)){
+                             lis();
+                         }
+                         else if((e.getKeyCode() == KeyEvent.VK_J) && 
+                                 ((e.getModifiers() & KeyEvent.CTRL_MASK) != 0)){
+                             obj();
+                         }
+                         else if((e.getKeyCode() == KeyEvent.VK_H) && 
+                                 ((e.getModifiers() & KeyEvent.CTRL_MASK) != 0)){
+                             
+                             help();
+                         }
+                         else if((e.getKeyCode() == KeyEvent.VK_C) && 
+                                 ((e.getModifiers() & KeyEvent.CTRL_MASK) != 0)){
+                             LastAction = input.getText();
+                             makeAction();
+                             clearing();
+                         }
+                         else if((e.getKeyCode() == KeyEvent.VK_R) && 
+                                 ((e.getModifiers() & KeyEvent.CTRL_MASK) != 0)){
+                             Running();
+                         }
+                         else if((e.getKeyCode() == KeyEvent.VK_F) && 
+                                 ((e.getModifiers() & KeyEvent.CTRL_MASK) != 0)){
+                        
+                             Find();
+                         }
+                         else if((e.getKeyCode() == KeyEvent.VK_DELETE) || 
+                                 (e.getKeyCode() == KeyEvent.VK_BACK_SPACE) ||
+                                 (e.getKeyCode() == KeyEvent.VK_ENTER) ||
+                                 e.getKeyCode() == KeyEvent.VK_SPACE){
+                             
+                             if(SpaceChecker == false)makeAction();
+                             SpaceChecker= true ;
+                         }
+                         else if((e.getKeyCode() == KeyEvent.VK_Z) && e.isControlDown()){
+                             undoAction();
+                         }
+                         else if((e.getKeyCode() == KeyEvent.VK_Z) && e.isControlDown() && e.isShiftDown()){
+                             redoAction();
+                         }
+                         else {
+                             LastAction = input.getText();
+                             SpaceChecker = false ;
+                             status.setText("Think before you code .. Coders don't need luck ");
+                         }
+                        if(findControl == true || delay == true)
+                         unFind();
+            }
+
+            @Override
+            public void keyReleased(KeyEvent e) {
+                //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+            }
+            
         };
 }
