@@ -1,6 +1,7 @@
 package sicasm;
 
 import java.util.*;
+import sicasm.Constants.Errors;
 
 import sicasm.ExpressionTerm.Operator;
 import sicasm.ExpressionTerm.Sign;
@@ -41,7 +42,7 @@ public class ExpressionManager {
                     return symbolTable.get(i);
                 }
             }
-        } catch (Exception e) {
+        } catch (IndexOutOfBoundsException e) {
             return null;
         }
     }
@@ -112,13 +113,15 @@ public class ExpressionManager {
     }
 
     public ExpressionResult evaluate(String expression) {
-        ArrayList<Constants.Errors> errors = new ArrayList<>();
+        ArrayList<Errors> errors = new ArrayList<>();
         ArrayList<ExpressionTerm> expressionTerms = new ArrayList<>();
         ArrayList<Operator> operators = new ArrayList<>();
         boolean isValid = true;
+        boolean flagOfend = false;
         if (isOperator(expression.charAt(expression.length() - 1))) {
-            errors.add(Constants.Errors.EXPRESSION_ILLEGAL_END);
+            errors.add(Errors.EXPRESSION_ILLEGAL_END);
             isValid = false;
+            flagOfend = true;
         }
         int i;
         int countnegative = 0;
@@ -139,26 +142,123 @@ public class ExpressionManager {
             sign = Operator.PLUS;
             s = Sign.POSITIVE;
         }
-        operators.add(sign);
+        //operators.add(sign);
         expressionTerms.add(new ExpressionTerm(sign, s));
         StringBuilder term = new StringBuilder("");
         int relativeTerms = 0;
-        boolean here = false;
+        boolean here = true, herop = false;
         while (i < expression.length()) {
+            // System.out.println("term : "+term.toString());
             if (isOperator(expression.charAt(i))) {
                 int value;
+                if (!herop) {
+                    if (isInteger(term.toString())) {
+                        value = Integer.parseInt(term.toString());
+                        if (expressionTerms.get(expressionTerms.size() - 1)
+                                .getSign()
+                                == Sign.NEGATIVE) {
+                            value = -value;
+                        }
+                        expressionTerms.get(expressionTerms.size() - 1).
+                                setValue(value);
+//                        System.out.println("el term : " + term.toString());
+                        //System.out.println("hereasfasfas");
+                    } else {
+
+                        String label = term.toString();
+                        Symbol sym = findSymbol(label);
+                        if (sym != null) {
+//                            System.out.println("el term : " + term.toString());
+                            if (sym.getType() == Type.RELATIVE) {
+//                                System.out.println("Relative");
+                                if (expressionTerms
+                                        .get(expressionTerms.size() - 1)
+                                        .getOperator() == Operator.MINUS) {
+                                    if (expressionTerms.get(
+                                            expressionTerms.size() - 1)
+                                            .getSign()
+                                            == Sign.NEGATIVE) {
+                                        relativeTerms++;
+                                    } else {
+                                        relativeTerms--;
+                                    }
+                                } else if (expressionTerms
+                                        .get(expressionTerms.size() - 1)
+                                        .getOperator() == Operator.PLUS) {
+                                    if (expressionTerms.get(
+                                            expressionTerms.size() - 1)
+                                            .getSign()
+                                            == Sign.POSITIVE) {
+                                        relativeTerms++;
+                                    } else {
+                                        relativeTerms--;
+                                    }
+                                } else {
+                                    errors
+                                      .add(Errors
+                                        .EXPRESSION_INVALID_RELATIVE_OPERATOR);
+                                    isValid = false;
+                                }
+                            }
+                            value = sym.getAddressLoction();
+                            if (expressionTerms.get(expressionTerms.size() - 1).
+                                    getSign() == Sign.NEGATIVE) {
+                                value = -value;
+                            }
+                            expressionTerms.get(expressionTerms.size() - 1).
+                                    setValue(value);
+                        } else {
+                            errors.add(Errors.EXPRESSION_LABEL_UNDEFINED);
+                            isValid = false;
+                        }
+                    }
+                    herop = true;
+                }
+                term.delete(0, term.length());
+                operators.add(getOperator(expression.charAt(i)));
+                here = false;
+            } else {
+                if (!here) {
+//                    System.out.print( "Operators : "+operators);
+//                    System.out.println("");
+                    OperatorAndSign opas = new OperatorAndSign(operators);
+                    expressionTerms.add(new ExpressionTerm(opas.getOperator(),
+                            opas.getSign()));
+                    if (!opas.isValidUnary()) {
+                        errors.add(
+                                Errors.EXPRESSION_INVALID_UNARY_OPERATOR);
+                        isValid = false;
+                    }
+                    operators.clear();
+                    here = true;
+                }
+                term.append(expression.charAt(i));
+                herop = false;
+            }
+            ++i;
+        }
+        if (!flagOfend) {
+            int value;
+            if (!herop) {
                 if (isInteger(term.toString())) {
                     value = Integer.parseInt(term.toString());
-                    if (expressionTerms.get(i).getSign() == Sign.NEGATIVE) {
+                    if (expressionTerms.get(expressionTerms.size() - 1)
+                            .getSign()
+                            == Sign.NEGATIVE) {
                         value = -value;
                     }
                     expressionTerms.get(expressionTerms.size() - 1).
                             setValue(value);
+//                    System.out.println("el term : " + term.toString());
+                    //System.out.println("hereasfasfas");
                 } else {
+
                     String label = term.toString();
                     Symbol sym = findSymbol(label);
                     if (sym != null) {
+//                        System.out.println("el term : " + term.toString());
                         if (sym.getType() == Type.RELATIVE) {
+//                            System.out.println("Relative");
                             if (expressionTerms.get(expressionTerms.size() - 1)
                                     .getOperator() == Operator.MINUS) {
                                 if (expressionTerms.get(
@@ -179,13 +279,14 @@ public class ExpressionManager {
                                     relativeTerms--;
                                 }
                             } else {
-                                errors.add(Constants.Errors
+                                errors.add(Errors
                                         .EXPRESSION_INVALID_RELATIVE_OPERATOR);
                                 isValid = false;
                             }
                         }
                         value = sym.getAddressLoction();
-                        if (expressionTerms.get(i).getSign() == Sign.NEGATIVE) {
+                        if (expressionTerms.get(expressionTerms.size() - 1).
+                                getSign() == Sign.NEGATIVE) {
                             value = -value;
                         }
                         expressionTerms.get(expressionTerms.size() - 1).
@@ -195,31 +296,24 @@ public class ExpressionManager {
                         isValid = false;
                     }
                 }
-                term.delete(0, term.length());
-                operators.add(getOperator(expression.charAt(i)));
-                here = false;
-            } else {
-                if (!here) {
-                    OperatorAndSign opas = new OperatorAndSign(operators);
-                    expressionTerms.add(new ExpressionTerm(opas.getOperator(),
-                                                            opas.getSign()));
-                    if (!opas.isValidUnary()) {
-                        errors.add(
-                                Constants.Errors
-                                        .EXPRESSION_INVALID_UNARY_OPERATOR);
-                        isValid = false;
-                    }
-                    operators.clear();
-                    here = true;
-                }
-                term.append(i);
+                herop = true;
             }
-            ++i;
+            term.delete(0, term.length());
+            //operators.add(getOperator(expression.charAt(i)));
+            here = false;
         }
-        if ((relativeTerms & 1) == 1) {
+        if (relativeTerms != 0) {
             errors.add(Constants.Errors.EXPRESSION_ODD_RELATIVE_TERMS);
             isValid = false;
         }
+//        System.out.println("\n Relativ : " + relativeTerms + "\n");
+        //debugg
+//        for (ExpressionTerm expressionTerm : expressionTerms) {
+//            System.out.println("Operator : " + expressionTerm.getOperator());
+//            System.out.println("Sign : " + expressionTerm.getSign());
+//            System.out.println("Value : " + expressionTerm.getValue());
+//            System.out.println("");
+//        }
         if (!isValid) {
             return new ExpressionResult(errors, 0);
         }
@@ -236,8 +330,8 @@ public class ExpressionManager {
                     == ExpressionTerm.Operator.DIVIDE) {
                 int x = terms.get(i).getValue();
                 int y = term.pop();
-                if (terms.get(i).getOperator() == 
-                        ExpressionTerm.Operator.TIMES) {
+                if (terms.get(i).getOperator()
+                        == ExpressionTerm.Operator.TIMES) {
                     term.push(y * x);
                 } else {
                     if (x == 0) {
@@ -262,6 +356,7 @@ public class ExpressionManager {
                 term.push(y - x);
             }
         }
+        System.out.println("exp result : " + term.peek());
         return new ExpressionResult(null, term.pop());
     }
 }
