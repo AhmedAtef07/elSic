@@ -19,7 +19,7 @@ public final class ListFile {
     public static final int kWordSize = Constants.kWordSize;
     
     private final ArrayList<SourceLine> sourceLines;
-    private int locationCounter,
+    private int 
                 startAddress,
                 programLength;
     private SymbolTable symTable;
@@ -136,8 +136,9 @@ public final class ListFile {
                 if (locationAddress != -1) {
                     literal.setAddressLocation(locationAddress);
                 } else {
-                    literal.setAddressLocation(locationCounter);
-                    locationCounter += literal.getHexCode().length() / 2;
+                    literal.setAddressLocation(symTable.getLocationCounter());
+                    symTable.addToLoctionCounter(
+                            literal.getHexCode().length() / 2);
                     literal.setAsUsed();
                     literals.add(new SourceLine(literal));                    
                 }
@@ -170,6 +171,9 @@ public final class ListFile {
         boolean startFound = false,
                 firstUnCommentedLineFound = false, 
                 endFound = false;
+        
+        symTable.setBlock(progName);
+        int locationCounter = 0;
         
         for (int i = 0; i < sourceLines.size(); ++i) {
             SourceLine sourceLine = sourceLines.get(i);
@@ -219,7 +223,8 @@ public final class ListFile {
                 // checked before checking if there is an oprand or not.
                 locationCounter += 3;
             } else if (operand.isEmpty() && !menomonic.equals("LTORG") && 
-                    !menomonic.equals("ORG") && !menomonic.equals("END")) {
+                    !menomonic.equals("ORG") && !menomonic.equals("USE") && 
+                    !menomonic.equals("END")) {
                 // Directives which do not need oprand.
                 // Add error after more checks in pass two.
             } else if (menomonic.equals("START")) {
@@ -230,12 +235,13 @@ public final class ListFile {
                 if (label.isEmpty()) {
                     sourceLine.addError(Errors.UNNAMED_PROGRAM);
                 } else {
-                    progName = label;                    
+                    progName = label;             
                 }
                 if (isHexInteger(operand)) {
                     if (isInRange(operand, 16, kMemorySize)) {
                         locationCounter = Integer.parseInt(operand, 16);
                         startAddress = locationCounter;
+                        symTable.setStartBlock(label, startAddress);
                     } else {
                         sourceLine.addError(Errors.INVALID_ADDRESS_LOCATION);
                     }
@@ -288,9 +294,15 @@ public final class ListFile {
                 }
             } else if (menomonic.equals("LTORG")) {
                 ArrayList<SourceLine> addedLiterals = getUnLocatedLiterals();
-                for (SourceLine literalSourceLine: addedLiterals) {
+                if (!addedLiterals.isEmpty()) {
+                    for (SourceLine literalSourceLine: addedLiterals) {
+                        i++;
+                        sourceLines.add(i, literalSourceLine);
+                    }                    
+                } else {
                     i++;
-                    sourceLines.add(i, literalSourceLine);
+                    sourceLines.add(i, new SourceLine("........  There are no "
+                            + "literals to be located.  ........"));
                 }
             } else if (menomonic.equals("EQU")) {
                 if (operand.equals("*")) {
@@ -353,9 +365,16 @@ public final class ListFile {
                         sourceLine.addError(Errors.INVALID_ORIGIN_OPERAND);
                     }
                 }
+            } else if (menomonic.equals("USE")) {
+                if (operand.isEmpty()) {
+                    locationCounter = symTable.setDefaultBlock();
+                } else {
+                    locationCounter = symTable.setBlock(operand);                                        
+                }
             } else {
                 sourceLine.addError(Errors.UNRECOGNIZED_MNEMONIC);
             }
+            symTable.setLoctionCounter(locationCounter);
         }
         if (!firstUnCommentedLineFound) {
             throw new Exception("No SIC commands found!");
@@ -391,7 +410,7 @@ public final class ListFile {
             // Directives which do not need oprand are added as special cases.
             if (operand.isEmpty() && !menomonic.equals("RSUB") && 
                     !menomonic.equals("LTORG") && !menomonic.equals("END") && 
-                    !menomonic.equals("ORG")) {
+                    !menomonic.equals("ORG") && !menomonic.equals("USE")) {
                 sourceLine.addError(Errors.MISSING_OPERAND);
             }
             // Handeling Mnemonics and directives.
@@ -467,13 +486,14 @@ public final class ListFile {
             } else if (menomonic.equals("RESW")) {
             } else if (menomonic.equals("RESB")) {
             } else if (menomonic.equals("EQU")) {
+            } else if (menomonic.equals("USE")) {
             } else {
                 // Error undefined mneomonic. Error added in pass one.
             }
             sourceLine.setObjectCode(objectCode);            
             errorsExist |= sourceLine.containsErrors();
         }
-        programLength = locationCounter - startAddress;
+        programLength = symTable.getLocationCounter() - startAddress;
     }
 
     private boolean isValidLabelRepresentation(String label) {
