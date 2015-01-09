@@ -52,6 +52,9 @@ public final class ObjectFile {
             }             
             if (sourceLine.getMnemonic().equalsIgnoreCase("RESW") || 
                 sourceLine.getMnemonic().equalsIgnoreCase("RESB") ||
+                sourceLine.getMnemonic().equalsIgnoreCase("USE") ||
+                sourceLine.getMnemonic().equalsIgnoreCase("EQU") ||
+                sourceLine.getMnemonic().equalsIgnoreCase("ORG") ||
                 sourceLine.getMnemonic().equalsIgnoreCase("END")) {                
                 int it = 0;
                 while(it < record.length()) {
