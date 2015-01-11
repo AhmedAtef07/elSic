@@ -10,20 +10,9 @@ import sicasm.Symbol.Type;
 public class ExpressionManager {
 
     private final SymbolTable symbolTable;
-    private static boolean instanceTaken = false;
 
-    private ExpressionManager(SymbolTable symbolTable) {
+    public ExpressionManager(SymbolTable symbolTable) {
         this.symbolTable = symbolTable;
-    }
-
-    public static ExpressionManager getExpressionManager(
-            SymbolTable symbolTable) throws Exception {
-        if (instanceTaken) {
-            throw new Exception(
-                    "Only one instance can be taken from this class");
-        }
-        instanceTaken = true;
-        return new ExpressionManager(symbolTable);
     }
 
     private boolean isInteger(String t) {

@@ -11,10 +11,8 @@ public class SicAsm extends JPanel {
     private JFileChooser fc;
 
     public static void main(String[] args) throws Exception {
-//         assemble("E:\\Ahmed\\College\\Term 6\\Subjects\\System Programming\\"
-//                 + "Assembler TA\\elSic\\SicAsm\\jars\\SRCFILE", true);
-//        new SicAsm().openFileDialog();
-//         new SicAsm().assembleSourceFile();
+        // new SicAsm().openFileDialog();
+        // new SicAsm().assembleSourceFile();
          new SicAsm().runGUI();       
     }
     

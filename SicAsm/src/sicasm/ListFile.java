@@ -44,7 +44,7 @@ public final class ListFile {
         literalTable = new ArrayList<>();
         errorsExist = false;
         originLocations = new Stack<>();
-        expManager = ExpressionManager.getExpressionManager(symTable);
+        expManager = new ExpressionManager(symTable);
         
         passOne();
         passTwo();
